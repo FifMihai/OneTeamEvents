@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. UTILIZATORII (Studenti si Organizatori)
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String    
+  name      String
+  role      String    @default("STUDENT") // Poate fi "STUDENT" sau "ORGANIZER"
+  
+  bookings  Booking[] 
+  events    Event[]
+}
+
+// 2. EVENIMENTELE
+model Event {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  location    String
+  date        DateTime
+  category    String    
+  createdAt   DateTime  @default(now())
+  
+  organizerId Int?
+  organizer   User?     @relation(fields: [organizerId], references: [id])
+  participants Booking[]
+}
+
+// 3. INSCRIERILE (Legatura dintre Student si Eveniment)
+model Booking {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  eventId   Int
+  joinedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  event     Event    @relation(fields: [eventId], references: [id])
+}
