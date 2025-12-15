@@ -23,7 +23,7 @@ export default async function Home() {
         <h1 className="text-4xl font-extrabold text-blue-900 mb-4">
           OneTeamEvents 🎓
         </h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-lg text-slate-900">
           Evenimentele tale din campus, toate într-un singur loc.
         </p>
       </div>
