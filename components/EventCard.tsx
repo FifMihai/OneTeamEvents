@@ -11,9 +11,9 @@ export default function EventCard({ event }: { event: any }) {
         />
       )}
       
-      <h3>{event.title}</h3>
-      <p style={{ color: 'gray' }}>📍 {event.location} | 📅 {new Date(event.date).toLocaleDateString()}</p>
-      <p>{event.description}</p>
+      <h3 style={{ color: 'black' }}>{event.title}</h3>
+      <p style={{ color: 'black' }}>📍 {event.location} | 📅 {new Date(event.date).toLocaleDateString()}</p>
+      <p style={{ color: 'red' }}>{event.description}</p>
       
       <button style={{ background: '#0070f3', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer' }}>
         Detalii
