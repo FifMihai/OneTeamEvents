@@ -1,5 +1,5 @@
 // components/EventCard.jsx
-export default function EventCard({ event }) {
+export default function EventCard({ event }: { event: any }) {
   return (
     <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '10px', marginBottom: '20px' }}>
       {/* Dacă avem imagine, o afișăm */}
