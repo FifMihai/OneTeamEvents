@@ -1,11 +1,11 @@
 import pool from '@/lib/db'; 
-// ATENTIE: Aici era problema. Folosim @ ca sa fim siguri ca gaseste folderul.
 import EventsWrapper from '../components/EventsWrapper'; 
+import ThemeToggle from '../components/ThemeToggle';
+
 
 async function getEvents() {
   try {
     const result = await pool.query('SELECT * FROM events ORDER BY date ASC');
-    // Convertim datele ca sa nu avem erori
     return JSON.parse(JSON.stringify(result.rows));
   } catch (error) {
     console.error("Eroare la baza de date:", error);
@@ -27,8 +27,11 @@ export default async function Home() {
         </p>
       </div>
       
-      {/* Aici chemam componenta wrapper care contine Search, Pop-up si Carduri */}
+      {/* Wrapper-ul cu evenimente */}
       <EventsWrapper events={events} />
+
+      {/* Butonul de Dark Mode */}
+      <ThemeToggle />
     </main>
   );
 }
