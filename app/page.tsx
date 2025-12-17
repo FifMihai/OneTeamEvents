@@ -1,12 +1,12 @@
-// app/page.tsx
-import pool from '@/lib/db'; // Conexiunea la baza de date
-import EventCard from '@/components/EventCard'; // Componenta vizuală
+import pool from '@/lib/db'; 
+// ATENTIE: Aici era problema. Folosim @ ca sa fim siguri ca gaseste folderul.
+import EventsWrapper from '../components/EventsWrapper'; 
 
-// Funcția care aduce datele
 async function getEvents() {
   try {
     const result = await pool.query('SELECT * FROM events ORDER BY date ASC');
-    return result.rows;
+    // Convertim datele ca sa nu avem erori
+    return JSON.parse(JSON.stringify(result.rows));
   } catch (error) {
     console.error("Eroare la baza de date:", error);
     return [];
@@ -18,7 +18,6 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50 p-8 font-sans">
-      {/* Header */}
       <div className="max-w-6xl mx-auto mb-12 text-center">
         <h1 className="text-4xl font-extrabold text-blue-900 mb-4">
           OneTeamEvents 🎓
@@ -28,19 +27,8 @@ export default async function Home() {
         </p>
       </div>
       
-      {/* Lista de Evenimente */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {events.map((event: any) => (
-          <EventCard key={event.id} event={event} />
-        ))}
-      </div>
-
-      {/* Mesaj dacă e gol */}
-      {events.length === 0 && (
-        <div className="text-center py-20 text-gray-400">
-          Nu există evenimente sau nu s-a putut conecta la baza de date.
-        </div>
-      )}
+      {/* Aici chemam componenta wrapper care contine Search, Pop-up si Carduri */}
+      <EventsWrapper events={events} />
     </main>
   );
 }
