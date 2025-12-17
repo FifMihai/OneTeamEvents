@@ -10,7 +10,8 @@ export default function SearchBar({ onSearch }: { onSearch: (val: string) => voi
       </div>
       <input
         type="text"
-        className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-full bg-gray-50 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+        // Am adăugat clasele 'dark:...' pentru a arăta bine pe fundal negru
+        className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-full bg-gray-50 focus:ring-blue-500 focus:border-blue-500 shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         placeholder="Caută evenimente..."
         onChange={(e) => onSearch(e.target.value)}
       />
