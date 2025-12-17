@@ -1,32 +1,36 @@
-"use client"; // Asta ii spune ca e componenta interactiva
+import React from 'react';
+import { Sun, Moon } from 'lucide-react'; // Dacă nu ai lucide, șterge și vezi mai jos
 
-import { useState, useEffect } from "react";
+interface ThemeToggleProps {
+  // Le punem pe ambele opționale (?) ca să nu mai ai erori cu "Missing property"
+  toggleTheme?: () => void;
+  theme?: string | 'light' | 'dark' | boolean; 
+}
 
-export default function ThemeToggle() {
-  const [theme, setTheme] = useState("light");
-
-  // Citim tema din memorie cand se incarca pagina
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
-    setTheme(savedTheme);
-    document.documentElement.setAttribute("data-theme", savedTheme);
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
-  };
+export const ThemeToggle: React.FC<ThemeToggleProps> = ({ toggleTheme, theme }) => {
+  
+  // Verificăm dacă tema e dark (acceptăm și string "dark", și boolean true)
+  const isDark = theme === 'dark' || theme === true;
 
   return (
     <button
       onClick={toggleTheme}
-      // Clasele de mai jos il pun fix in coltul dreapta-jos
-      className="fixed bottom-6 right-6 p-4 rounded-full shadow-xl bg-white dark:bg-gray-800 text-3xl hover:scale-110 transition-transform z-50 border border-gray-200 dark:border-gray-700"
+      // Z-50 și FIXED ca să fie mereu vizibil și clickabil
+      className="fixed bottom-5 right-5 z-50 p-3 rounded-full bg-slate-800 text-white shadow-xl hover:bg-slate-700 transition-all cursor-pointer border border-slate-600"
       title="Schimbă tema"
     >
-      {theme === "light" ? "🌙" : "☀️"}
+      {isDark ? (
+        // Dacă ai lucide-react:
+        <Sun size={24} className="text-yellow-400" />
+      ) : (
+        // Dacă ai lucide-react:
+        <Moon size={24} className="text-blue-300" />
+      )}
+
+      {/* Dacă NU ai lucide-react și îți dă eroare la <Sun /> sau <Moon />, 
+         șterge liniile de mai sus și decomentează linia de jos:
+      */}
+      {/* <span className="text-xl">{isDark ? '☀️' : '🌙'}</span> */}
     </button>
   );
-}
+};

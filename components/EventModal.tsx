@@ -1,31 +1,76 @@
-"use client";
+import React, { useEffect } from 'react';
+import { X } from 'lucide-react'; 
 
-import { X, Calendar, MapPin } from "lucide-react";
+export interface EventData {
+  id?: string | number;
+  title: string;
+  date: string;
+  location: string;
+  description: string;
+  image?: string;
+}
 
-export default function EventModal({ event, onClose }: { event: any, onClose: () => void }) {
-  if (!event) return null;
+interface EventModalProps {
+  onClose: () => void;
+  event: EventData | null; // Dacă event are date, modalul se deschide
+}
+
+export const EventModal: React.FC<EventModalProps> = ({ onClose, event }) => {
+  
+  // Calculăm isOpen automat: dacă avem event, e deschis
+  const isOpen = !!event;
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
+
+  // Dacă nu avem eveniment, nu randăm nimic
+  if (!isOpen || !event) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-200">
-          <X className="w-6 h-6 text-gray-700" />
-        </button>
-
-        {/* Daca ai imagini reale, scoate comentariul de mai jos */}
-        <div className="h-64 bg-gray-200 w-full relative">
-           {event.image && <img src={event.image} alt={event.title} className="w-full h-full object-cover" />}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      
+      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl animate-in fade-in zoom-in duration-200">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between p-5 border-b border-slate-700">
+          <h2 className="text-xl font-bold text-white tracking-wide">
+            {event.title}
+          </h2>
+          
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
+          >
+            <X size={24} />
+          </button>
         </div>
 
-        <div className="p-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">{event.title}</h2>
-          <div className="flex gap-4 text-gray-600 mb-4">
-            <span className="flex items-center gap-1"><MapPin className="w-4 h-4"/> {event.location}</span>
-            <span className="flex items-center gap-1"><Calendar className="w-4 h-4"/> {event.date}</span>
-          </div>
-          <p className="text-gray-700 mb-6">{event.description || "Fără descriere."}</p>
+        {/* BODY */}
+        <div className="p-6 text-slate-300 space-y-4">
+            
+            <div className="flex flex-wrap gap-4 text-sm font-semibold text-blue-400">
+                <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-md">
+                    <span>📅</span>
+                    <span>{event.date}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-md">
+                    <span>📍</span>
+                    <span>{event.location}</span>
+                </div>
+            </div>
+
+            <div className="text-slate-300 leading-relaxed">
+                {event.description}
+            </div>
+
         </div>
       </div>
     </div>
   );
-}
+};

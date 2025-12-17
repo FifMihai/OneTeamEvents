@@ -2,7 +2,6 @@
 import { MapPin, Calendar, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// ATENTIE AICI: Definim ca aceasta componenta accepta DOUA lucruri: event SI onOpenDetails
 export default function EventCard({ 
   event, 
   onOpenDetails 
@@ -34,6 +33,14 @@ export default function EventCard({
     setIsFavorite(!isFavorite);
   };
 
+  // --- FIXUL PENTRU EROAREA DIN IMAGINE ---
+  // Transformăm obiectul Date într-un string lizibil
+  const formattedDate = new Date(event.date).toLocaleDateString("ro-RO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300 border border-gray-100 flex flex-col h-full">
       <div className="relative h-48 bg-gray-200">
@@ -63,12 +70,12 @@ export default function EventCard({
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-500" />
-              {event.date}
+              {/* AICI ERA EROAREA: Acum afișăm variabila text, nu obiectul */}
+              {formattedDate}
             </div>
           </div>
         </div>
 
-        {/* Aici folosim functia pe care tocmai am definit-o sus */}
         <button 
           onClick={() => onOpenDetails(event)}
           className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
