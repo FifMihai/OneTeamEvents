@@ -11,12 +11,20 @@ export default function EventCard({
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // Verificăm dacă evenimentul este la favorite
   useEffect(() => {
     const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
     if (favorites.includes(event.id)) {
       setIsFavorite(true);
     }
   }, [event.id]);
+
+  // Funcție pentru formatarea datei (o folosim și la afișare, și la trimiterea spre modal)
+  const formattedDate = new Date(event.date).toLocaleDateString("ro-RO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -33,13 +41,17 @@ export default function EventCard({
     setIsFavorite(!isFavorite);
   };
 
-  // --- FIXUL PENTRU EROAREA DIN IMAGINE ---
-  // Transformăm obiectul Date într-un string lizibil
-  const formattedDate = new Date(event.date).toLocaleDateString("ro-RO", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  // Funcție sigură pentru deschiderea detaliilor
+  const handleOpenDetails = () => {
+    // AICI ESTE REPARAȚIA PENTRU EROARE:
+    // Creăm o copie a evenimentului unde 'date' este sigur un String (formattedDate),
+    // nu un obiect Date. Astfel, Modalul nu va mai crăpa.
+    const safeEvent = {
+      ...event,
+      date: formattedDate // Trimitem data gata formatată ca text
+    };
+    onOpenDetails(safeEvent);
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300 border border-gray-100 flex flex-col h-full">
@@ -70,14 +82,14 @@ export default function EventCard({
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-500" />
-              {/* AICI ERA EROAREA: Acum afișăm variabila text, nu obiectul */}
+              {/* Afișăm variabila formatată */}
               {formattedDate}
             </div>
           </div>
         </div>
 
         <button 
-          onClick={() => onOpenDetails(event)}
+          onClick={handleOpenDetails}
           className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
         >
           Detalii
