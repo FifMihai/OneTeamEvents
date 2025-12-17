@@ -1,76 +1,85 @@
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react'; 
+"use client";
+import { X, Calendar, MapPin } from "lucide-react";
 
-export interface EventData {
-  id?: string | number;
-  title: string;
-  date: string;
-  location: string;
-  description: string;
-  image?: string;
-}
+export function EventModal({ event, onClose }: { event: any; onClose: () => void }) {
+  if (!event) return null;
 
-interface EventModalProps {
-  onClose: () => void;
-  event: EventData | null; // Dacă event are date, modalul se deschide
-}
-
-export const EventModal: React.FC<EventModalProps> = ({ onClose, event }) => {
-  
-  // Calculăm isOpen automat: dacă avem event, e deschis
-  const isOpen = !!event;
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isOpen]);
-
-  // Dacă nu avem eveniment, nu randăm nimic
-  if (!isOpen || !event) return null;
+ 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    
+    
+    return date.toLocaleDateString("ro-RO", {
+      weekday: "long", 
+      year: "numeric",
+      month: "long",   
+      day: "numeric",
+      hour: "2-digit", 
+      minute: "2-digit"
+    });
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200">
         
-        {/* HEADER */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-700">
-          <h2 className="text-xl font-bold text-white tracking-wide">
-            {event.title}
-          </h2>
-          
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
-          >
-            <X size={24} />
-          </button>
+        {/* Buton X Închidere */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 bg-black/10 hover:bg-black/20 rounded-full transition z-10"
+        >
+          <X className="w-6 h-6 text-gray-700" />
+        </button>
+
+        {/* Imagine */}
+        <div className="h-64 bg-gray-200 relative">
+           <img 
+             src={event.image || "/placeholder.jpg"} 
+             alt={event.title}
+             className="w-full h-full object-cover"
+           />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+           <h2 className="absolute bottom-4 left-6 text-3xl font-bold text-white shadow-sm">
+             {event.title}
+           </h2>
         </div>
 
-        {/* BODY */}
-        <div className="p-6 text-slate-300 space-y-4">
+        {/* Conținut */}
+        <div className="p-6">
+          <div className="flex flex-wrap gap-4 mb-6">
             
-            <div className="flex flex-wrap gap-4 text-sm font-semibold text-blue-400">
-                <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-md">
-                    <span>📅</span>
-                    <span>{event.date}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-md">
-                    <span>📍</span>
-                    <span>{event.location}</span>
-                </div>
+            {/* DATA FORMATATA FRUMOS AICI */}
+            <div className="bg-blue-50 px-4 py-2 rounded-lg flex items-center gap-2 text-blue-700 border border-blue-100">
+              <Calendar className="w-5 h-5" />
+              <span className="font-medium capitalize">
+                {formatDate(event.date)}
+              </span>
             </div>
 
-            <div className="text-slate-300 leading-relaxed">
-                {event.description}
+            <div className="bg-pink-50 px-4 py-2 rounded-lg flex items-center gap-2 text-pink-700 border border-pink-100">
+              <MapPin className="w-5 h-5" />
+              <span className="font-medium">{event.location}</span>
             </div>
+          </div>
 
+          <div className="prose prose-blue max-w-none text-gray-600 leading-relaxed">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Descriere eveniment</h3>
+            <p>
+              {event.description || "Nu există o descriere detaliată pentru acest eveniment."}
+            </p>
+          </div>
+
+          <div className="mt-8 flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition"
+            >
+              Închide
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
-};
+}
