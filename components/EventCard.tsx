@@ -2,12 +2,21 @@
 import { MapPin, Calendar, Heart, Trash2, Pencil } from "lucide-react";
 import { useState, useEffect } from "react";
 
+// Configurare imagini automate pe categorii
+const EVENT_IMAGES: Record<string, string> = {
+  Sport: "https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1000&auto=format&fit=crop",
+  Party: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000&auto=format&fit=crop",
+  Workshop: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1000&auto=format&fit=crop",
+  Conferință: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?q=80&w=1000&auto=format&fit=crop",
+  General: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=1000&auto=format&fit=crop"
+};
+
 interface EventCardProps {
   event: any;
   onOpenDetails: (e: any) => void;
   onDelete: (id: string) => void;
   onEdit: (event: any) => void;
-  isOwner: boolean; // Prop nou pentru a verifica dacă utilizatorul este creatorul
+  isOwner: boolean;
 }
 
 export default function EventCard({ 
@@ -60,10 +69,12 @@ export default function EventCard({
     }
   };
 
+  // Funcție pentru a lua imaginea corectă
+  const displayImage = event.image || EVENT_IMAGES[event.category] || EVENT_IMAGES.General;
+
   return (
     <div className="bg-white dark:bg-[#1e1e1e] rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800 flex flex-col h-full group relative text-left">
       
-      {/* BUTOANE ADMIN - Apar DOAR dacă isOwner este true */}
       {isOwner && (
         <div className="absolute top-2 left-2 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button 
@@ -85,9 +96,10 @@ export default function EventCard({
 
       <div className="relative h-48 bg-gray-200 overflow-hidden">
         <img 
-          src={event.image || "/placeholder.jpg"} 
+          src={displayImage} 
           alt={event.title} 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => { e.currentTarget.src = EVENT_IMAGES.General; }}
         />
         
         <div className={`absolute top-2 ${isOwner ? 'left-24' : 'left-2'} px-2 py-1 rounded-md text-[10px] font-bold text-white uppercase shadow-sm transition-all ${getCategoryColor(event.category)}`}>

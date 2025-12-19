@@ -2,6 +2,14 @@
 import { X, MapPin, Users, CheckCircle2, UserPlus, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 
+const EVENT_IMAGES: Record<string, string> = {
+  Sport: "https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1000&auto=format&fit=crop",
+  Party: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000&auto=format&fit=crop",
+  Workshop: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1000&auto=format&fit=crop",
+  Conferință: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?q=80&w=1000&auto=format&fit=crop",
+  General: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=1000&auto=format&fit=crop"
+};
+
 export function EventModal({ 
   event, 
   onClose,
@@ -13,7 +21,6 @@ export function EventModal({
 }) {
   const [isParticipating, setIsParticipating] = useState(false);
 
-  // Verificăm dacă ești înscris la ACEST eveniment specific când se deschide modalul
   useEffect(() => {
     if (event) {
       const participations = JSON.parse(localStorage.getItem("participations") || "[]");
@@ -35,12 +42,13 @@ export function EventModal({
 
     localStorage.setItem("participations", JSON.stringify(newParticipations));
     setIsParticipating(!isParticipating);
-    
-    // Anunțăm ClientPage că s-a schimbat ceva în listă
     onParticipationChange();
   };
 
   const mockParticipants = ["Mihai F.", "Artiom B.", "Raul S.", "Andreea D.", "Luca T."];
+
+  // Imaginea automată
+  const displayImage = event.image || EVENT_IMAGES[event.category] || EVENT_IMAGES.General;
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[100] backdrop-blur-md animate-in fade-in duration-300">
@@ -55,9 +63,10 @@ export function EventModal({
 
         <div className="md:w-5/12 relative h-64 md:h-auto bg-gray-200 text-left">
            <img 
-             src={event.image || "/placeholder.jpg"} 
+             src={displayImage} 
              alt={event.title} 
              className="w-full h-full object-cover"
+             onError={(e) => { e.currentTarget.src = EVENT_IMAGES.General; }}
            />
            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
            <div className="absolute bottom-8 left-8 right-8">
