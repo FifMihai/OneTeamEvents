@@ -1,5 +1,5 @@
 "use client";
-import { MapPin, Calendar, Heart } from "lucide-react";
+import { MapPin, Calendar, Heart, Tag } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function EventCard({ 
@@ -11,7 +11,6 @@ export default function EventCard({
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Verificăm dacă evenimentul este la favorite
   useEffect(() => {
     const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
     if (favorites.includes(event.id)) {
@@ -19,7 +18,6 @@ export default function EventCard({
     }
   }, [event.id]);
 
-  // Funcție pentru formatarea datei (o folosim și la afișare, și la trimiterea spre modal)
   const formattedDate = new Date(event.date).toLocaleDateString("ro-RO", {
     day: "numeric",
     month: "long",
@@ -30,69 +28,77 @@ export default function EventCard({
     e.stopPropagation();
     const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
     let newFavorites;
-
     if (isFavorite) {
       newFavorites = favorites.filter((id: string) => id !== event.id);
     } else {
       newFavorites = [...favorites, event.id];
     }
-
     localStorage.setItem("favorites", JSON.stringify(newFavorites));
     setIsFavorite(!isFavorite);
   };
 
-  // Funcție sigură pentru deschiderea detaliilor
   const handleOpenDetails = () => {
-    // AICI ESTE REPARAȚIA PENTRU EROARE:
-    // Creăm o copie a evenimentului unde 'date' este sigur un String (formattedDate),
-    // nu un obiect Date. Astfel, Modalul nu va mai crăpa.
     const safeEvent = {
       ...event,
-      date: formattedDate // Trimitem data gata formatată ca text
+      date: formattedDate 
     };
     onOpenDetails(safeEvent);
   };
 
+  // Logica pentru culorile categoriilor
+  const getCategoryColor = (cat: string) => {
+    switch(cat) {
+      case 'Sport': return 'bg-green-500';
+      case 'Party': return 'bg-purple-500';
+      case 'Workshop': return 'bg-orange-500';
+      case 'Conferință': return 'bg-blue-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300 border border-gray-100 flex flex-col h-full">
-      <div className="relative h-48 bg-gray-200">
+    <div className="bg-white dark:bg-[#1e1e1e] rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800 flex flex-col h-full group">
+      <div className="relative h-48 bg-gray-200 overflow-hidden">
         <img 
           src={event.image || "/placeholder.jpg"} 
           alt={event.title} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
+        
+        {/* CATEGORY TAG */}
+        <div className={`absolute top-2 left-2 px-2 py-1 rounded-md text-[10px] font-bold text-white uppercase shadow-sm ${getCategoryColor(event.category)}`}>
+          {event.category || 'General'}
+        </div>
+
         <button 
           onClick={toggleFavorite}
-          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-sm hover:scale-110 transition"
+          className="absolute top-2 right-2 p-2 bg-white/90 dark:bg-black/50 rounded-full shadow-sm hover:scale-110 transition backdrop-blur-sm"
         >
-          <Heart 
-            className={`w-5 h-5 ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"}`} 
-          />
+          <Heart className={`w-5 h-5 ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
         </button>
       </div>
 
       <div className="p-5 flex-grow flex flex-col justify-between">
         <div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">{event.title}</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 line-clamp-1">{event.title}</h3>
           
-          <div className="text-sm text-gray-500 space-y-1 mb-3">
+          <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 mb-4">
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-blue-500" />
-              {event.location}
+              <span className="line-clamp-1">{event.location}</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-500" />
-              {/* Afișăm variabila formatată */}
               {formattedDate}
             </div>
           </div>
         </div>
 
         <button 
-          onClick={handleOpenDetails}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+          onClick={(e) => { e.stopPropagation(); handleOpenDetails(); }}
+          className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
         >
-          Detalii
+          Detalii & Participă
         </button>
       </div>
     </div>
