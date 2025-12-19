@@ -7,20 +7,18 @@ interface EventCardProps {
   onOpenDetails: (e: any) => void;
   onDelete: (id: string) => void;
   onEdit: (event: any) => void;
+  isOwner: boolean; // Prop nou pentru a verifica dacă utilizatorul este creatorul
 }
 
 export default function EventCard({ 
   event, 
   onOpenDetails,
   onDelete,
-  onEdit 
+  onEdit,
+  isOwner
 }: EventCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
-  
-  // Simulare: Momentan setăm pe true ca să vezi butoanele de admin
-  const isOwner = true; 
 
-  // 1. Verificăm la încărcare dacă este la favorite
   useEffect(() => {
     const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
     if (favorites.includes(event.id)) {
@@ -28,9 +26,8 @@ export default function EventCard({
     }
   }, [event.id]);
 
-  // 2. FUNCȚIA CARE LIPSEA: toggleFavorite
   const toggleFavorite = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Previne deschiderea modalului când apeși pe inimă
+    e.stopPropagation();
     const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
     let newFavorites;
 
@@ -64,20 +61,22 @@ export default function EventCard({
   };
 
   return (
-    <div className="bg-white dark:bg-[#1e1e1e] rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800 flex flex-col h-full group relative">
+    <div className="bg-white dark:bg-[#1e1e1e] rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800 flex flex-col h-full group relative text-left">
       
-      {/* BUTOANE ADMIN (Ștergere/Editare) */}
+      {/* BUTOANE ADMIN - Apar DOAR dacă isOwner este true */}
       {isOwner && (
         <div className="absolute top-2 left-2 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(event); }}
             className="p-2 bg-white/90 dark:bg-black/50 text-yellow-500 rounded-full hover:bg-yellow-500 hover:text-white transition shadow-sm backdrop-blur-md"
+            title="Editează"
           >
             <Pencil className="w-4 h-4" />
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(event.id); }}
             className="p-2 bg-white/90 dark:bg-black/50 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition shadow-sm backdrop-blur-md"
+            title="Șterge"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -103,24 +102,24 @@ export default function EventCard({
         </button>
       </div>
 
-      <div className="p-5 flex-grow flex flex-col justify-between text-left">
+      <div className="p-5 flex-grow flex flex-col justify-between">
         <div>
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 line-clamp-1">{event.title}</h3>
           <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 mb-4">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-blue-500" />
+            <div className="flex items-center gap-2 text-left">
+              <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
               <span className="line-clamp-1">{event.location}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-500" />
-              {formattedDate}
+            <div className="flex items-center gap-2 text-left">
+              <Calendar className="w-4 h-4 text-blue-500 shrink-0" />
+              <span>{formattedDate}</span>
             </div>
           </div>
         </div>
 
         <button 
           onClick={(e) => { e.stopPropagation(); handleOpenDetails(); }}
-          className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+          className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md active:scale-95"
         >
           Detalii
         </button>
