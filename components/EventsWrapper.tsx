@@ -1,12 +1,15 @@
+"use client";
 import React from 'react';
 import EventCard from './EventCard'; 
 
 interface EventsWrapperProps {
   events: any[];
   onEventClick: (event: any) => void; 
+  onDelete: (id: string) => void; // ADAUGĂ ACEASTA
+  onEdit: (event: any) => void;   // ADAUGĂ ACEASTA
 }
 
-const EventsWrapper: React.FC<EventsWrapperProps> = ({ events, onEventClick }) => {
+const EventsWrapper: React.FC<EventsWrapperProps> = ({ events, onEventClick, onDelete, onEdit }) => {
   
   if (!events || events.length === 0) {
     return <div className="text-center text-gray-500 py-10">Nu există evenimente momentan.</div>;
@@ -17,16 +20,13 @@ const EventsWrapper: React.FC<EventsWrapperProps> = ({ events, onEventClick }) =
       {events.map((eventItem, index) => (
         <div 
             key={eventItem.id || index} 
-            // Păstrăm click-ul pe tot cardul (opțional, dar recomandat pentru UX)
-            onClick={() => onEventClick(eventItem)}
-            className="cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+            className="hover:scale-[1.02] transition-transform duration-200"
         >
             <EventCard 
                 event={eventItem} 
-                
-                // --- FIXUL ESTE AICI ---
-                // Îi dăm funcția pe care o cere obligatoriu
                 onOpenDetails={() => onEventClick(eventItem)}
+                onDelete={onDelete} // PASĂM FUNCȚIA
+                onEdit={onEdit}     // PASĂM FUNCȚIA
             />
         </div>
       ))}

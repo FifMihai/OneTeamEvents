@@ -1,93 +1,144 @@
 "use client";
-import { X, MapPin, Users, CheckCircle2, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { X, MapPin, Users, CheckCircle2, UserPlus, Info } from "lucide-react";
+import { useState, useEffect } from "react";
 
-export function EventModal({ event, onClose }: { event: any; onClose: () => void }) {
-  // Starea pentru butonul de participare (locală pentru acum)
+export function EventModal({ 
+  event, 
+  onClose,
+  onParticipationChange 
+}: { 
+  event: any; 
+  onClose: () => void;
+  onParticipationChange: () => void; 
+}) {
   const [isParticipating, setIsParticipating] = useState(false);
+
+  // Verificăm dacă ești înscris la ACEST eveniment specific când se deschide modalul
+  useEffect(() => {
+    if (event) {
+      const participations = JSON.parse(localStorage.getItem("participations") || "[]");
+      setIsParticipating(participations.includes(event.id));
+    }
+  }, [event]);
 
   if (!event) return null;
 
-  // Listă simulată de participanți pe care Artiom o va popula din DB mai târziu
-  const mockParticipants = ["Mihai F.", "Artiom B.", "Raul S.", "Andreea D."];
+  const handleToggleParticipation = () => {
+    const participations = JSON.parse(localStorage.getItem("participations") || "[]");
+    let newParticipations;
+
+    if (isParticipating) {
+      newParticipations = participations.filter((id: string) => id !== event.id);
+    } else {
+      newParticipations = [...participations, event.id];
+    }
+
+    localStorage.setItem("participations", JSON.stringify(newParticipations));
+    setIsParticipating(!isParticipating);
+    
+    // Anunțăm ClientPage că s-a schimbat ceva în listă
+    onParticipationChange();
+  };
+
+  const mockParticipants = ["Mihai F.", "Artiom B.", "Raul S.", "Andreea D.", "Luca T."];
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden relative flex flex-col md:flex-row h-[90vh] md:h-auto max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[100] backdrop-blur-md animate-in fade-in duration-300">
+      <div className="bg-white dark:bg-[#1e1e1e] rounded-[2rem] shadow-2xl w-full max-w-4xl overflow-hidden relative flex flex-col md:flex-row max-h-[90vh]">
         
-        {/* Buton Închidere */}
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 dark:bg-black/20 rounded-full z-20 transition backdrop-blur-md">
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-full z-20 transition backdrop-blur-md"
+        >
           <X className="w-6 h-6 text-white" />
         </button>
 
-        {/* PARTEA STÂNGĂ: Imagine și Titlu */}
-        <div className="md:w-1/2 relative h-64 md:h-auto bg-gray-200">
+        <div className="md:w-5/12 relative h-64 md:h-auto bg-gray-200 text-left">
            <img 
              src={event.image || "/placeholder.jpg"} 
              alt={event.title} 
              className="w-full h-full object-cover"
            />
-           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-           <div className="absolute bottom-6 left-6 right-6">
-             <span className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full uppercase mb-2 inline-block">
+           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+           <div className="absolute bottom-8 left-8 right-8">
+             <span className="px-3 py-1 bg-blue-600 text-white text-[10px] font-black rounded-lg uppercase mb-3 inline-block tracking-widest shadow-lg">
                {event.category || "General"}
              </span>
-             <h2 className="text-3xl font-bold text-white leading-tight">{event.title}</h2>
+             <h2 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tighter">
+               {event.title}
+             </h2>
            </div>
         </div>
 
-        {/* PARTEA DREAPTĂ: Detalii și Acțiuni */}
-        <div className="md:w-1/2 p-8 overflow-y-auto flex flex-col bg-white dark:bg-[#1e1e1e]">
-          <div className="flex flex-col gap-4 mb-8">
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-              <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                <MapPin className="w-5 h-5 text-blue-500" />
+        <div className="md:w-7/12 p-8 md:p-12 overflow-y-auto flex flex-col bg-white dark:bg-[#1e1e1e]">
+          
+          <div className="flex flex-col gap-6 mb-10 text-left">
+            <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5">
+              <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
+                <MapPin className="w-6 h-6" />
               </div>
-              <span className="font-medium">{event.location}</span>
+              <div>
+                <p className="text-xs font-bold uppercase text-gray-400">Locație</p>
+                <p className="font-bold text-lg">{event.location}</p>
+              </div>
             </div>
           </div>
 
-          <div className="mb-8">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Despre Eveniment</h3>
-            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-              {event.description || "Acest eveniment nu are încă o descriere detaliată adăugată de organizator."}
+          <div className="mb-10 text-left">
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+              <Info className="w-4 h-4" /> Despre Eveniment
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg italic">
+              "{event.description || "Organizatorul nu a adăugat încă o descriere pentru acest eveniment."}"
             </p>
           </div>
 
-          {/* SECȚIUNE PARTICIPANȚI */}
-          <div className="mt-auto pt-6 border-t border-gray-100 dark:border-gray-800">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-gray-400 uppercase flex items-center gap-2">
-                <Users className="w-4 h-4" /> Participanți ({isParticipating ? mockParticipants.length + 1 : mockParticipants.length})
+          <div className="mt-auto pt-8 border-t border-gray-100 dark:border-white/5 text-left">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                <Users className="w-4 h-4" /> 
+                Participanți ({isParticipating ? mockParticipants.length + 1 : mockParticipants.length})
               </h3>
             </div>
             
-            <div className="flex -space-x-3 mb-6">
-              {mockParticipants.map((p, i) => (
-                <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-[#1e1e1e] bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold" title={p}>
-                  {p[0]}
-                </div>
-              ))}
-              {isParticipating && (
-                <div className="w-10 h-10 rounded-full border-2 border-white dark:border-[#1e1e1e] bg-green-500 flex items-center justify-center text-white text-xs font-bold animate-bounce" title="Tu">
-                  Tu
-                </div>
-              )}
+            <div className="flex flex-wrap items-center gap-3 mb-8">
+              <div className="flex -space-x-4">
+                {mockParticipants.slice(0, 4).map((p, i) => (
+                  <div 
+                    key={i} 
+                    className="w-12 h-12 rounded-full border-4 border-white dark:border-[#1e1e1e] bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center text-[10px] font-black shadow-sm"
+                  >
+                    {p.split(' ').map(n => n[0]).join('')}
+                  </div>
+                ))}
+                {isParticipating && (
+                  <div className="w-12 h-12 rounded-full border-4 border-white dark:border-[#1e1e1e] bg-blue-500 flex items-center justify-center text-white text-[10px] font-black animate-bounce z-10 shadow-lg">
+                    TU
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium ml-2">
+                {isParticipating ? "Tu și alți " : ""} {mockParticipants.length} persoane vin la acest eveniment.
+              </p>
             </div>
 
             <button
-              onClick={() => setIsParticipating(!isParticipating)}
-              className={`w-full py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg ${
+              onClick={handleToggleParticipation}
+              className={`w-full py-5 rounded-[1.5rem] font-black transition-all flex items-center justify-center gap-3 shadow-xl ${
                 isParticipating 
-                ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/10" 
-                : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-500/20"
+                ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/20 dark:text-red-400 border border-red-200 dark:border-red-900/30" 
+                : "bg-blue-600 text-white hover:bg-blue-500 hover:shadow-blue-600/30 active:scale-95"
               }`}
             >
               {isParticipating ? (
-                <>Anulează Participarea</>
+                <>
+                  <CheckCircle2 className="w-6 h-6" /> 
+                  Anulează Participarea
+                </>
               ) : (
                 <>
-                  <UserPlus className="w-5 h-5" /> Vreau să particip
+                  <UserPlus className="w-6 h-6" /> 
+                  Vreau să particip
                 </>
               )}
             </button>
