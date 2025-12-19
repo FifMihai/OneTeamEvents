@@ -1,5 +1,5 @@
 "use client";
-import { MapPin, Calendar, Heart, Tag } from "lucide-react";
+import { MapPin, Calendar, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function EventCard({ 
@@ -45,7 +45,7 @@ export default function EventCard({
     onOpenDetails(safeEvent);
   };
 
-  // Logica pentru culorile categoriilor
+  // Culorile pentru tag-urile de categorie
   const getCategoryColor = (cat: string) => {
     switch(cat) {
       case 'Sport': return 'bg-green-500';
@@ -65,7 +65,7 @@ export default function EventCard({
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
         
-        {/* CATEGORY TAG */}
+        {/* Tag Categorie */}
         <div className={`absolute top-2 left-2 px-2 py-1 rounded-md text-[10px] font-bold text-white uppercase shadow-sm ${getCategoryColor(event.category)}`}>
           {event.category || 'General'}
         </div>
@@ -94,11 +94,12 @@ export default function EventCard({
           </div>
         </div>
 
+        {/* Butonul modificat înapoi la "Detalii" */}
         <button 
           onClick={(e) => { e.stopPropagation(); handleOpenDetails(); }}
           className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
         >
-          Detalii & Participă
+          Detalii
         </button>
       </div>
     </div>
