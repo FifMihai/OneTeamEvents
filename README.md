@@ -2,7 +2,7 @@
 
 **OneTeamEvents** este o aplicație web dedicată organizării, promovării și gestionării evenimentelor din mediul universitar, dar și a celor desfășurate în afara facultății. Platforma are ca scop îmbunătățirea comunicării între studenți și facilitarea participării la activități academice, sociale sau recreative.
 
- **Live Demo:** [[OneTeamEvents on Vercel]](https://oneteamevents.vercel.app/](https://one-team-events.vercel.app))
+ **Live Demo:** [[https://oneteamevents.vercel.app/]]
 
 ---
 
