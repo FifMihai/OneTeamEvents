@@ -4,78 +4,101 @@ import { useState, useEffect } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { EventModal } from "./EventModal";
 import EventsWrapper from "./EventsWrapper";
-import SearchBar from "./SearchBar"; // <--- 1. IMPORTĂ COMPONENTA
+import SearchBar from "./SearchBar";
+import CreateEventModal from "./CreateEventModal"; // Importă noul modal
+import { PlusCircle, Heart, LayoutGrid } from "lucide-react";
 
-interface ClientPageProps {
-  initialEvents: any[]; 
-}
-
-export default function ClientPage({ initialEvents }: ClientPageProps) {
-  // --- SANITIZARE DATE ---
-  const safeEvents = initialEvents.map((event) => ({
-    ...event,
-    date: new Date(event.date).toISOString(), 
-  }));
-
+export default function ClientPage({ initialEvents }: { initialEvents: any[] }) {
   // --- STATE-URI ---
+  const [events, setEvents] = useState(initialEvents);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
-  
-  // 2. STATE PENTRU CĂUTARE
-  const [searchTerm, setSearchTerm] = useState(""); 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"all" | "favorites">("all");
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
-  // --- LOGICA DARK MODE ---
+  // Actualizăm favoritele din localStorage la intervale sau la montare
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const html = document.documentElement;
-      if (isDarkMode) {
-        html.classList.add("dark");
-        html.style.colorScheme = "dark";
-      } else {
-        html.classList.remove("dark");
-        html.style.colorScheme = "light";
-      }
-    }
-  }, [isDarkMode]);
+    const saved = JSON.parse(localStorage.getItem("favorites") || "[]");
+    setFavoriteIds(saved);
+  }, []);
 
-  const handleToggleTheme = () => {
-    setIsDarkMode((prev) => !prev);
+  // --- FILTRARE LOGICĂ ---
+  const filteredEvents = events.filter((event) => {
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          event.location.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (viewMode === "favorites") {
+      return matchesSearch && favoriteIds.includes(event.id);
+    }
+    return matchesSearch;
+  });
+
+  const handleAddEvent = (newEvent: any) => {
+    setEvents([newEvent, ...events]); // Adăugăm local evenimentul nou
   };
 
-  // 3. LOGICA DE FILTRARE
-  // Dacă avem text în search, filtrăm evenimentele. Dacă nu, le arătăm pe toate.
-  const filteredEvents = safeEvents.filter((event) =>
-    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <main className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-[#121212]' : 'bg-gray-100'}`}>
+    <main className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-[#121212] text-white' : 'bg-gray-50 text-gray-900'}`}>
       
       {/* HEADER */}
-      <div className="pt-10 pb-6 text-center">
-        <h1 className="text-4xl font-bold text-blue-500 mb-2">
-          OneTeamEvents 🎓
+      <div className="pt-12 pb-6 text-center">
+        <h1 className="text-5xl font-extrabold text-blue-500 mb-3 tracking-tight">
+          OneTeamEvents <span className="animate-pulse">🎓</span>
         </h1>
-        <p className="text-gray-400">Evenimentele tale din campus, toate într-un singur loc.</p>
+        <p className="text-gray-400 text-lg">Evenimentele tale din campus, într-un singur loc.</p>
       </div>
 
-      {/* 4. AICI ADAUGI SEARCH BAR-UL CA SĂ FIE VIZIBIL */}
-      <div className="px-4">
-        <SearchBar onSearch={setSearchTerm} />
+      {/* CONTROALE: Search + Add + Tabs */}
+      <div className="max-w-6xl mx-auto px-4 space-y-6">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="w-full md:w-2/3">
+            <SearchBar onSearch={setSearchTerm} />
+          </div>
+          
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg w-full md:w-auto justify-center"
+          >
+            <PlusCircle className="w-5 h-5" /> Adaugă Eveniment
+          </button>
+        </div>
+
+        {/* TABS PENTRU FILTRARE */}
+        <div className="flex justify-center gap-4 border-b border-gray-800 pb-2">
+          <button 
+            onClick={() => setViewMode("all")}
+            className={`flex items-center gap-2 pb-2 px-4 transition ${viewMode === 'all' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
+          >
+            <LayoutGrid className="w-4 h-4" /> Toate
+          </button>
+          <button 
+            onClick={() => {
+              // Refresh la favorite din localStorage înainte de a schimba view-ul
+              setFavoriteIds(JSON.parse(localStorage.getItem("favorites") || "[]"));
+              setViewMode("favorites");
+            }}
+            className={`flex items-center gap-2 pb-2 px-4 transition ${viewMode === 'favorites' ? 'border-b-2 border-red-500 text-red-500' : 'text-gray-500'}`}
+          >
+            <Heart className="w-4 h-4" /> Favorite ({favoriteIds.length})
+          </button>
+        </div>
       </div>
 
-      {/* COMPONENTA DE AFIȘARE - Trimitem 'filteredEvents' acum! */}
-      <div className="p-10">
+      {/* GRID EVENIMENTE */}
+      <div className="max-w-7xl mx-auto p-10">
          <EventsWrapper 
-            events={filteredEvents} // <--- Trimitem lista filtrată
+            events={filteredEvents} 
             onEventClick={setSelectedEvent} 
          />
       </div>
 
-      <ThemeToggle 
-        theme={isDarkMode} 
-        toggleTheme={handleToggleTheme} 
+      {/* MODALE */}
+      <CreateEventModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        onAdd={handleAddEvent}
       />
 
       <EventModal 
@@ -83,6 +106,7 @@ export default function ClientPage({ initialEvents }: ClientPageProps) {
         onClose={() => setSelectedEvent(null)} 
       />
 
+      <ThemeToggle theme={isDarkMode} toggleTheme={() => setIsDarkMode(!isDarkMode)} />
     </main>
   );
 }

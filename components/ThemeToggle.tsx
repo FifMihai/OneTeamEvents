@@ -27,8 +27,8 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ toggleTheme, theme }) 
         <Moon size={24} className="text-blue-300" />
       )}
 
-      {/* Dacă NU ai lucide-react și îți dă eroare la <Sun /> sau <Moon />, 
-         șterge liniile de mai sus și decomentează linia de jos:
+      {/*
+         
       */}
       {/* <span className="text-xl">{isDark ? '☀️' : '🌙'}</span> */}
     </button>
