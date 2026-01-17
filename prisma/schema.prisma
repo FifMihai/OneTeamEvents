@@ -26,7 +26,8 @@ model Event {
   description String?
   location    String
   date        DateTime
-  category    String    
+  category    String 
+  imageUrl    String?   
   createdAt   DateTime  @default(now())
   
   organizerId Int?
