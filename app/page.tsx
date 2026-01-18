@@ -1,46 +1,23 @@
-// app/page.tsx
-import pool from '@/lib/db'; // Conexiunea la baza de date
-import EventCard from '@/components/EventCard'; // Componenta vizuală
+import pool from '@/lib/db'; // Conexiunea ta la baza de date
+import ClientPage from '../components/ClientPage'; // Importăm componenta nouă
 
-// Funcția care aduce datele
-async function getEvents() {
-  try {
-    const result = await pool.query('SELECT * FROM events ORDER BY date ASC');
-    return result.rows;
-  } catch (error) {
-    console.error("Eroare la baza de date:", error);
-    return [];
-  }
-}
-
+// Aceasta e o componentă de SERVER (fără "use client")
 export default async function Home() {
-  const events = await getEvents();
+  
+  // 1. Luăm datele din bază (Codul tău de backend)
+  let events = [];
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT * FROM events'); // Sau cum ai tu query-ul
+    events = result.rows;
+    client.release();
+  } catch (err) {
+    console.error('Eroare la baza de date:', err);
+    // Poți lăsa lista goală sau pune date dummy dacă crapă baza
+  }
 
+  // 2. Trimitem datele la componenta de Client care le afișează
   return (
-    <main className="min-h-screen bg-gray-50 p-8 font-sans">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto mb-12 text-center">
-        <h1 className="text-4xl font-extrabold text-blue-900 mb-4">
-          OneTeamEvents 🎓
-        </h1>
-        <p className="text-lg text-slate-900">
-          Evenimentele tale din campus, toate într-un singur loc.
-        </p>
-      </div>
-      
-      {/* Lista de Evenimente */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {events.map((event: any) => (
-          <EventCard key={event.id} event={event} />
-        ))}
-      </div>
-
-      {/* Mesaj dacă e gol */}
-      {events.length === 0 && (
-        <div className="text-center py-20 text-gray-400">
-          Nu există evenimente sau nu s-a putut conecta la baza de date.
-        </div>
-      )}
-    </main>
+    <ClientPage initialEvents={events} />
   );
 }
