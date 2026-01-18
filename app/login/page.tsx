@@ -26,7 +26,7 @@ const Login = () => {
   console.log("Date trimise:", formData);
 
   // 2. Te trimite la pagina ta principală (Home), nu pe un link extern
-  window.location.href = '/'; 
+  window.location.href = '/dashboard'; 
 };
 
   return (
@@ -74,7 +74,7 @@ const Login = () => {
           </div>
 
           <button type="submit" className="login-button-main">Log In</button>
-          
+
           <button 
             type="button" 
             className="register-button" 
