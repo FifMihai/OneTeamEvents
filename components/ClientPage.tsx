@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+// 1. IMPORTĂM ACȚIUNEA NOUĂ
+import { createEventInDb } from "../app/actions";; // <--- MODIFICARE NOUĂ
 import { ThemeToggle } from "./ThemeToggle";
 import { EventModal } from "./EventModal";
 import EventsWrapper from "./EventsWrapper";
@@ -10,12 +12,11 @@ import EditEventModal from "./EditEventModal";
 import { PlusCircle, Heart, LayoutGrid, UserCheck } from "lucide-react";
 
 export default function ClientPage({ initialEvents }: { initialEvents: any[] }) {
-  // SIMULARE UTILIZATOR LOGAT (Această info va veni de la Raul prin Artiom)
   const currentUserId = "user_mihai_123"; 
 
   const [events, setEvents] = useState(initialEvents.map(ev => ({
     ...ev,
-    creatorId: ev.creatorId || "admin" // Punem un creatorId default pe evenimentele vechi
+    creatorId: ev.creatorId || "admin"
   })));
 
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -58,10 +59,25 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
     );
   };
 
-  const handleAddEvent = (newEvent: any) => {
-    // Când creezi un eveniment nou, îi atribuim automat ID-ul tău de creator
+  // 2. MODIFICĂM FUNCȚIA DE ADAUGARE SĂ FIE ASINCRONĂ ȘI SĂ APELEZE SERVERUL
+  const handleAddEvent = async (newEvent: any) => { // <--- Adăugat 'async'
+    
+    // Pregătim obiectul complet
     const eventWithOwner = { ...newEvent, creatorId: currentUserId };
-    setEvents([eventWithOwner, ...events]);
+
+    // OPTIONAL: Actualizare optimistă (arată pe ecran înainte să fie gata pe server)
+    // setEvents([eventWithOwner, ...events]); 
+
+    // Apelăm funcția de server creată la Pasul 1
+    const response = await createEventInDb(eventWithOwner); // <--- APEL CĂTRE NEON
+
+    if (response.success) {
+      // Dacă s-a salvat cu succes, adăugăm evenimentul real (cu ID-ul din bază) în listă
+      setEvents((prev) => [response.newEvent, ...prev]);
+      // alert("Eveniment salvat cu succes!"); 
+    } else {
+      alert("Eroare: Evenimentul nu s-a putut salva în baza de date.");
+    }
   };
 
   const filteredEvents = events.filter((event) => {
@@ -122,7 +138,7 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
             onEventClick={setSelectedEvent} 
             onDelete={handleDeleteEvent} 
             onEdit={handleEditEvent}
-            currentUserId={currentUserId} // Trimitem ID-ul utilizatorului logat
+            currentUserId={currentUserId}
          />
       </div>
 
