@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// 1. IMPORTĂM ACȚIUNEA NOUĂ
-import { createEventInDb } from "../app/actions";; // <--- MODIFICARE NOUĂ
+// Importăm toate cele 3 acțiuni din server
+import { createEventInDb, deleteEventFromDb, updateEventInDb } from "../app/actions";
 import { ThemeToggle } from "./ThemeToggle";
 import { EventModal } from "./EventModal";
 import EventsWrapper from "./EventsWrapper";
@@ -41,10 +41,19 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
     refreshData();
   }, []);
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = async (id: string) => {
     if (window.confirm("Ești sigur că vrei să ștergi acest eveniment?")) {
-      setEvents((prev) => prev.filter((ev) => ev.id !== id));
-      refreshData();
+      // Trimitem cererea de ștergere la server împreună cu ID-ul tău
+      const result = await deleteEventFromDb(id, currentUserId);
+      
+      if (result.success) {
+        // Dacă serverul a zis OK, ștergem și din ecran
+        setEvents((prev) => prev.filter((ev) => ev.id !== id));
+        refreshData();
+      } else {
+        // Dacă serverul a zis NU (pentru că nu e evenimentul tău), afișăm mesaj
+        alert(result.message || "Nu poți șterge evenimentul altcuiva!");
+      }
     }
   };
 
@@ -53,28 +62,28 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (updatedEvent: any) => {
-    setEvents((prev) => 
-      prev.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
-    );
+  const handleSaveEdit = async (updatedEvent: any) => {
+    // Trimitem cererea de editare la server împreună cu ID-ul tău
+    const result = await updateEventInDb(updatedEvent, currentUserId);
+    
+    if (result.success) {
+      setEvents((prev) => 
+        prev.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
+      );
+    } else {
+      alert(result.message || "Nu poți edita evenimentul altcuiva!");
+    }
   };
 
-  // 2. MODIFICĂM FUNCȚIA DE ADAUGARE SĂ FIE ASINCRONĂ ȘI SĂ APELEZE SERVERUL
-  const handleAddEvent = async (newEvent: any) => { // <--- Adăugat 'async'
-    
-    // Pregătim obiectul complet
+  const handleAddEvent = async (newEvent: any) => {
+    // Punem ID-ul tău pe noul eveniment
     const eventWithOwner = { ...newEvent, creatorId: currentUserId };
-
-    // OPTIONAL: Actualizare optimistă (arată pe ecran înainte să fie gata pe server)
-    // setEvents([eventWithOwner, ...events]); 
-
-    // Apelăm funcția de server creată la Pasul 1
-    const response = await createEventInDb(eventWithOwner); // <--- APEL CĂTRE NEON
+    
+    // Trimitem la server
+    const response = await createEventInDb(eventWithOwner);
 
     if (response.success) {
-      // Dacă s-a salvat cu succes, adăugăm evenimentul real (cu ID-ul din bază) în listă
       setEvents((prev) => [response.newEvent, ...prev]);
-      // alert("Eveniment salvat cu succes!"); 
     } else {
       alert("Eroare: Evenimentul nu s-a putut salva în baza de date.");
     }
