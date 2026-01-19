@@ -1,33 +1,57 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import './login.css';
+
 const Login = () => {
-  // State pentru vizibilitate parolă
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(""); // State pentru erori
+  const router = useRouter();
   
-  // State pentru datele din input-uri
   const [formData, setFormData] = useState({
     email_username: '',
     password: ''
   });
 
-  // Funcția care se ocupă de butonul de "Ochi"
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
- const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  // 1. Creează biletul de acces (Cookie-ul) pe care middleware-ul îl caută la linia 6
-  document.cookie = "auth_token=true; path=/; max-age=86400"; 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
 
-  console.log("Date trimise:", formData);
+    try {
+      // 1. Verificam credentialele in Baza de Date
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          email: formData.email_username, // API-ul asteapta email
+          password: formData.password 
+        }),
+      });
 
-  // 2. Te trimite la pagina ta principală (Home), nu pe un link extern
-  window.location.href = '/dashboard'; 
-};
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Aici prindem eroarea daca parola e gresita sau userul nu exista
+        setError(data.error || "Date de logare incorecte.");
+        return;
+      }
+
+      // 2. DACA parola e corecta, setam cookie-ul si intram
+      // Acum cookie-ul e setat DOAR daca ai cont valid
+      document.cookie = "auth_token=true; path=/; max-age=86400"; 
+      
+      console.log("Login reusit:", data);
+      router.push('/dashboard'); 
+
+    } catch (err) {
+      setError("Eroare server. Verifică conexiunea.");
+    }
+  };
 
   return (
     <div className="login-wrapper">
@@ -36,11 +60,11 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           
           <div className="input-group">
-            <label htmlFor="email_username">Email or Username</label>
+            <label htmlFor="email_username">Email</label>
             <input 
               type="text" 
               id="email_username" 
-              placeholder="Enter your email or username"
+              placeholder="Enter your email"
               required 
               onChange={(e) => setFormData({...formData, email_username: e.target.value})}
             />
@@ -73,12 +97,19 @@ const Login = () => {
             <a href="/reset">Forgot Password?</a>
           </div>
 
+          {/* Mesaj de eroare cu rosu integrat in design */}
+          {error && (
+            <div style={{ color: "#ef4444", marginBottom: "15px", fontSize: "0.9rem", textAlign: "center" }}>
+              {error}
+            </div>
+          )}
+
           <button type="submit" className="login-button-main">Log In</button>
 
           <button 
             type="button" 
             className="register-button" 
-            onClick={() => window.location.href = '/register'}
+            onClick={() => router.push('/register')}
           >
             Create New Account
           </button>
