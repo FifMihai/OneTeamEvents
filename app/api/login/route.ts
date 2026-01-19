@@ -1,25 +1,37 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { email_username, password } = await request.json();
-    const client = await pool.connect();
-    
-    // Căutăm userul în tabelul 'users'
-    const result = await client.query(
-      'SELECT * FROM users WHERE (email = $1 OR username = $1) AND password = $2',
-      [email_username, password]
-    );
-    
-    client.release();
+    const { email, password } = await request.json();
 
-    if (result.rows.length > 0) {
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: "Email și parola sunt obligatorii" },
+        { status: 400 }
+      );
+    }
+
+    // 1. Căutăm userul după email
+    const user = await prisma.user.findUnique({
+      where: { email: email },
+    });
+
+    // 2. Verificăm dacă userul există ȘI dacă parola se potrivește cu hash-ul din bază
+    if (user && (await bcrypt.compare(password, user.password))) {
       return NextResponse.json({ success: true });
     } else {
-      return NextResponse.json({ error: "Cont inexistent sau parolă greșită" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Cont inexistent sau parolă greșită" },
+        { status: 401 }
+      );
     }
   } catch (error) {
-    return NextResponse.json({ error: "Eroare de conexiune la bază" }, { status: 500 });
+    console.error("Login Error:", error);
+    return NextResponse.json(
+      { error: "Eroare internă server" },
+      { status: 500 }
+    );
   }
 }
