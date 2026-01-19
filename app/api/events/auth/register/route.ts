@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from ".../../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Cont creat cu succes!" }, { status: 201 });
 
   } catch (error) {
+    console.error("Registration error:", error); // E util sa vezi eroarea in loguri
     return NextResponse.json({ error: "Eroare server" }, { status: 500 });
   }
 }
