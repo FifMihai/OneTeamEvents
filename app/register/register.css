@@ -1,0 +1,134 @@
+/* register.css */
+.register-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.register-container {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Titlu vizibil și impunător */
+.register-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #000000 !important;
+    /* Negru intens */
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+/* Label-uri vizibile (rezolvă problema textului șters) */
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: #1a1a1a !important;
+}
+
+/* Input principal */
+.input-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 16px;
+    color: #000000;
+    /* Textul introdus de tine va fi negru clar */
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+/* Placeholder-ul rămâne șters */
+.input-group input::placeholder {
+    color: #a0aec0;
+    font-weight: 400;
+}
+
+.input-group input:focus {
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+}
+
+/* REPARAREA OCHIULUI URIAȘ */
+.password-field-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+#togglePassword {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+#togglePassword img {
+    width: 20px !important;
+    /* Dimensiune fixă mică */
+    height: 20px !important;
+    display: block;
+    object-fit: contain;
+}
+
+/* Butonul principal de Register (Albastru sau Verde) */
+.register-button-main {
+    width: 100%;
+    padding: 14px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+    margin-top: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+    transition: background 0.2s;
+}
+
+.register-button-main:hover {
+    background-color: #357abd;
+}
+
+/* Butonul Back to Log In */
+.back-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #f8f9fa;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.2s;
+}
+
+.back-button:hover {
+    background-color: #edf2f7;
+    color: #2d3748;
+}

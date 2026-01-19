@@ -1,0 +1,104 @@
+/* reset.css */
+.reset-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.reset-container {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Titlu vizibil (elimină aspectul șters) */
+.reset-container h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #000000 !important;
+    /* Negru intens */
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.input-group {
+    margin-bottom: 25px;
+}
+
+/* Label vizibil */
+.input-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: #1a1a1a !important;
+}
+
+/* Input principal */
+.input-group input {
+    width: 100%;
+    padding: 14px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 16px;
+    color: #000000;
+    /* Textul scris de tine va fi negru clar */
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+/* Placeholder gri șters */
+.input-group input::placeholder {
+    color: #a0aec0;
+    font-weight: 400;
+}
+
+.input-group input:focus {
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+}
+
+/* Butonul principal de trimitere (Portocaliu sau Albastru) */
+.reset-button-main {
+    width: 100%;
+    padding: 14px;
+    background-color: #4a90e2;
+    /* Am păstrat albastrul pentru acțiuni de sistem */
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+    transition: background 0.2s;
+}
+
+.reset-button-main:hover {
+    background-color: #357abd;
+}
+
+/* Butonul Back to Log In */
+.back-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #f8f9fa;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.2s;
+}
+
+.back-button:hover {
+    background-color: #edf2f7;
+    color: #2d3748;
+}
