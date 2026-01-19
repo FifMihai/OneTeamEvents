@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// Importăm toate cele 3 acțiuni din server
+import { useRouter } from "next/navigation";
 import { createEventInDb, deleteEventFromDb, updateEventInDb } from "../app/actions";
 import { ThemeToggle } from "./ThemeToggle";
 import { EventModal } from "./EventModal";
@@ -9,16 +9,24 @@ import EventsWrapper from "./EventsWrapper";
 import SearchBar from "./SearchBar";
 import CreateEventModal from "./CreateEventModal";
 import EditEventModal from "./EditEventModal";
-import { PlusCircle, Heart, LayoutGrid, UserCheck } from "lucide-react";
+import { PlusCircle, Heart, LayoutGrid, UserCheck, LogOut } from "lucide-react";
 
-export default function ClientPage({ initialEvents }: { initialEvents: any[] }) {
-  const currentUserId = "user_mihai_123"; 
+interface ClientPageProps {
+  initialEvents: any[];
+  currentUser: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
 
-  const [events, setEvents] = useState(initialEvents.map(ev => ({
-    ...ev,
-    creatorId: ev.creatorId || "admin"
-  })));
+export default function ClientPage({ initialEvents, currentUser }: ClientPageProps) {
+  const router = useRouter();
+  
+  // ID-ul utilizatorului (număr)
+  const currentUserId = currentUser.id;
 
+  const [events, setEvents] = useState(initialEvents);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,6 +37,11 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
   const [viewMode, setViewMode] = useState<"all" | "favorites" | "participating">("all");
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [participatingIds, setParticipatingIds] = useState<string[]>([]);
+
+  // Actualizăm evenimentele când serverul trimite date noi
+  useEffect(() => {
+    setEvents(initialEvents);
+  }, [initialEvents]);
 
   const refreshData = () => {
     const savedFavs = JSON.parse(localStorage.getItem("favorites") || "[]");
@@ -41,51 +54,52 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
     refreshData();
   }, []);
 
-  const handleDeleteEvent = async (id: string) => {
+  // --- LOGOUT ---
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+    router.refresh();
+  };
+
+  // --- DELETE ---
+  const handleDeleteEvent = async (id: number) => { 
     if (window.confirm("Ești sigur că vrei să ștergi acest eveniment?")) {
-      // Trimitem cererea de ștergere la server împreună cu ID-ul tău
-      const result = await deleteEventFromDb(id, currentUserId);
+      const result = await deleteEventFromDb(id);
       
       if (result.success) {
-        // Dacă serverul a zis OK, ștergem și din ecran
-        setEvents((prev) => prev.filter((ev) => ev.id !== id));
-        refreshData();
+        router.refresh(); 
       } else {
-        // Dacă serverul a zis NU (pentru că nu e evenimentul tău), afișăm mesaj
-        alert(result.message || "Nu poți șterge evenimentul altcuiva!");
+        alert(result.message || "Eroare la ștergere");
       }
     }
   };
 
+  // --- EDIT ---
   const handleEditEvent = (event: any) => {
     setEventToEdit(event);
     setIsEditModalOpen(true);
   };
 
   const handleSaveEdit = async (updatedEvent: any) => {
-    // Trimitem cererea de editare la server împreună cu ID-ul tău
-    const result = await updateEventInDb(updatedEvent, currentUserId);
-    
+    const result = await updateEventInDb(updatedEvent);
     if (result.success) {
-      setEvents((prev) => 
-        prev.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
-      );
+      setIsEditModalOpen(false);
+      setEventToEdit(null);
+      router.refresh();
     } else {
       alert(result.message || "Nu poți edita evenimentul altcuiva!");
     }
   };
 
+  // --- ADD ---
   const handleAddEvent = async (newEvent: any) => {
-    // Punem ID-ul tău pe noul eveniment
-    const eventWithOwner = { ...newEvent, creatorId: currentUserId };
-    
-    // Trimitem la server
-    const response = await createEventInDb(eventWithOwner);
+    const response = await createEventInDb(newEvent);
 
     if (response.success) {
-      setEvents((prev) => [response.newEvent, ...prev]);
+      setIsCreateModalOpen(false);
+      router.refresh();
     } else {
-      alert("Eroare: Evenimentul nu s-a putut salva în baza de date.");
+      alert("Eroare: Evenimentul nu s-a putut salva.");
     }
   };
 
@@ -93,15 +107,43 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           event.location.toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (viewMode === "favorites") return matchesSearch && favoriteIds.includes(event.id);
-    if (viewMode === "participating") return matchesSearch && participatingIds.includes(event.id);
+    if (viewMode === "favorites") return matchesSearch && favoriteIds.includes(String(event.id));
+    if (viewMode === "participating") return matchesSearch && participatingIds.includes(String(event.id));
     return matchesSearch;
   });
 
   return (
     <main className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-[#121212] text-white' : 'bg-gray-50 text-gray-900'}`}>
       
-      <div className="pt-16 pb-8 text-center">
+      {/* HEADER */}
+      <header className="bg-white/5 backdrop-blur-md border-b border-gray-200 dark:border-white/10 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+         <div className="flex items-center gap-2">
+           <span className="text-2xl">🎓</span>
+           <span className="font-bold text-xl hidden sm:block text-blue-500">OneTeamEvents</span>
+         </div>
+
+         <div className="flex items-center gap-4">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-bold text-gray-800 dark:text-white">{currentUser.name}</p>
+              <p className="text-xs text-gray-400">{currentUser.email}</p>
+            </div>
+            
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+               {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "U"}
+            </div>
+
+            <button 
+              onClick={handleLogout}
+              className="p-2 ml-2 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition border border-transparent hover:border-red-500/20" 
+              title="Deconectare"
+            >
+              <LogOut size={20} />
+            </button>
+         </div>
+      </header>
+
+      {/* TITLU */}
+      <div className="pt-8 pb-8 text-center">
         <h1 className="text-5xl md:text-6xl font-black text-blue-500 mb-4 tracking-tighter">
           OneTeamEvents <span className="animate-pulse">🎓</span>
         </h1>
@@ -123,6 +165,7 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
           </button>
         </div>
 
+        {/* TABS */}
         <div className="flex justify-center gap-4 md:gap-10 mt-12 border-b border-gray-200 dark:border-white/5 pb-1">
           <button onClick={() => setViewMode("all")} className={`flex items-center gap-2 pb-3 px-4 text-xs font-bold transition-all relative ${viewMode === 'all' ? 'text-blue-500' : 'text-gray-500'}`}>
             <LayoutGrid className="w-4 h-4" /> Toate
@@ -143,17 +186,34 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
 
       <div className="max-w-7xl mx-auto p-6 md:p-10">
          <EventsWrapper 
-            events={filteredEvents} 
-            onEventClick={setSelectedEvent} 
-            onDelete={handleDeleteEvent} 
-            onEdit={handleEditEvent}
-            currentUserId={currentUserId}
+           events={filteredEvents} 
+           onEventClick={setSelectedEvent} 
+           onDelete={handleDeleteEvent} 
+           onEdit={handleEditEvent}
+           currentUserId={currentUserId} // Trimitem ca numar
          />
       </div>
 
-      <CreateEventModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onAdd={handleAddEvent} />
-      <EditEventModal isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setEventToEdit(null); }} onSave={handleSaveEdit} event={eventToEdit} />
-      <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onParticipationChange={refreshData} />
+      {/* MODALELE - Aici era problema înainte, lipseau */}
+      <CreateEventModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        onAdd={handleAddEvent} 
+      />
+      
+      <EditEventModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => { setIsEditModalOpen(false); setEventToEdit(null); }} 
+        onSave={handleSaveEdit} 
+        event={eventToEdit} 
+      />
+      
+      <EventModal 
+        event={selectedEvent} 
+        onClose={() => setSelectedEvent(null)} 
+        onParticipationChange={refreshData} 
+      />
+      
       <ThemeToggle theme={isDarkMode} toggleTheme={() => setIsDarkMode(!isDarkMode)} />
     </main>
   );

@@ -1,99 +1,97 @@
-'use server'
+"use server";
 
-import pool from '@/lib/db';
-import { revalidatePath } from 'next/cache';
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
-// 1. Funcția de ADAUGARE
+// Helper: Verificăm userul real din cookie
+async function getAuthenticatedUser() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token");
+  if (!token) return null;
+  try {
+    return jwt.verify(token.value, process.env.JWT_SECRET || "secret") as any;
+  } catch {
+    return null;
+  }
+}
+
+// --- 1. CREATE ---
 export async function createEventInDb(eventData: any) {
-  const client = await pool.connect();
-  
   try {
-    const sql = `
-      INSERT INTO events (title, description, location, date, category, image, "creatorId")
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *;
-    `;
-    
-    const values = [
-      eventData.title,
-      eventData.description,
-      eventData.location,
-      eventData.date,
-      eventData.category,
-      eventData.image,
-      eventData.creatorId
-    ];
+    const user = await getAuthenticatedUser();
+    if (!user) return { success: false, message: "Trebuie să fii logat!" };
 
-    const result = await client.query(sql, values);
-    revalidatePath('/');
-    
-    return { success: true, newEvent: result.rows[0] };
-    
+    const newEvent = await prisma.event.create({
+      data: {
+        title: eventData.title,
+        description: eventData.description,
+        location: eventData.location,
+        date: new Date(eventData.date),
+        category: eventData.category,
+        imageUrl: eventData.image, // Asigură-te că ai coloana asta în Prisma
+        organizerId: user.userId, // Legăm evenimentul de userul logat
+      },
+    });
+
+    revalidatePath("/dashboard"); 
+    return { success: true, newEvent };
   } catch (error) {
-    console.error('Eroare la salvare:', error);
-    return { success: false };
-  } finally {
-    client.release();
+    console.error("Create Error:", error);
+    return { success: false, message: "Eroare la baza de date" };
   }
 }
 
-// 2. Funcția de ȘTERGERE SECURIZATĂ
-export async function deleteEventFromDb(eventId: string, userId: string) {
-  const client = await pool.connect();
+// --- 2. DELETE ---
+export async function deleteEventFromDb(eventId: number) {
   try {
-    // Trucul de securitate: Ștergem DOAR dacă id-ul evenimentului ȘI id-ul creatorului se potrivesc
-    const sql = `DELETE FROM events WHERE id = $1 AND "creatorId" = $2`;
-    const result = await client.query(sql, [eventId, userId]);
+    const user = await getAuthenticatedUser();
+    if (!user) return { success: false, message: "Nu ești logat" };
 
-    // Verificăm dacă s-a șters ceva (dacă nu, înseamnă că nu era evenimentul tău)
-    if (result.rowCount === 0) {
-      return { success: false, message: "Nu ai permisiunea să ștergi acest eveniment sau el nu există." };
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+
+    if (!event) return { success: false, message: "Evenimentul nu există" };
+    
+    // Verificăm dacă ești proprietarul
+    if (event.organizerId !== user.userId) {
+      return { success: false, message: "Nu ai voie să ștergi evenimentul altcuiva!" };
     }
 
-    revalidatePath('/');
+    await prisma.event.delete({ where: { id: eventId } });
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
-    console.error('Eroare la ștergere:', error);
-    return { success: false, message: "Eroare server" };
-  } finally {
-    client.release();
+    return { success: false, message: "Eroare la ștergere" };
   }
 }
 
-// 3. Funcția de EDITARE SECURIZATĂ
-export async function updateEventInDb(event: any, userId: string) {
-  const client = await pool.connect();
+// --- 3. UPDATE ---
+export async function updateEventInDb(eventData: any) {
   try {
-    // Actualizăm DOAR dacă creatorId din bază este același cu userId-ul tău
-    const sql = `
-      UPDATE events 
-      SET title = $1, description = $2, location = $3, date = $4, category = $5, image = $6
-      WHERE id = $7 AND "creatorId" = $8
-    `;
+    const user = await getAuthenticatedUser();
+    if (!user) return { success: false, message: "Nu ești logat" };
+
+    const event = await prisma.event.findUnique({ where: { id: eventData.id } });
     
-    const values = [
-      event.title, 
-      event.description, 
-      event.location, 
-      event.date, 
-      event.category, 
-      event.image,
-      event.id,
-      userId // Cheia de securitate
-    ];
-
-    const result = await client.query(sql, values);
-
-    if (result.rowCount === 0) {
-      return { success: false, message: "Nu ai permisiunea să editezi acest eveniment." };
+    if (!event || event.organizerId !== user.userId) {
+      return { success: false, message: "Nu ai voie să modifici acest eveniment!" };
     }
 
-    revalidatePath('/');
-    return { success: true };
+    const updated = await prisma.event.update({
+      where: { id: eventData.id },
+      data: {
+        title: eventData.title,
+        description: eventData.description,
+        location: eventData.location,
+        date: new Date(eventData.date),
+        category: eventData.category,
+      },
+    });
+
+    revalidatePath("/dashboard");
+    return { success: true, updatedEvent: updated };
   } catch (error) {
-    console.error('Eroare la editare:', error);
-    return { success: false, message: "Eroare server" };
-  } finally {
-    client.release();
+    return { success: false, message: "Update eșuat" };
   }
 }

@@ -6,11 +6,11 @@ import './login.css';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState(""); // State pentru erori
+  const [error, setError] = useState("");
   const router = useRouter();
   
   const [formData, setFormData] = useState({
-    email_username: '',
+    email: '', // Am schimbat în 'email' simplu ca să fie clar
     password: ''
   });
 
@@ -23,12 +23,11 @@ const Login = () => {
     setError("");
 
     try {
-      // 1. Verificam credentialele in Baza de Date
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          email: formData.email_username, // API-ul asteapta email
+          email: formData.email, 
           password: formData.password 
         }),
       });
@@ -36,17 +35,16 @@ const Login = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        // Aici prindem eroarea daca parola e gresita sau userul nu exista
         setError(data.error || "Date de logare incorecte.");
         return;
       }
 
-      // 2. DACA parola e corecta, setam cookie-ul si intram
-      // Acum cookie-ul e setat DOAR daca ai cont valid
-      document.cookie = "auth_token=true; path=/; max-age=86400"; 
+      // AM SCOS linia cu document.cookie = ... 
+      // Serverul a pus deja cookie-ul corect.
       
-      console.log("Login reusit:", data);
+      console.log("Login reușit");
       router.push('/dashboard'); 
+      router.refresh(); // Un refresh scurt ca să vadă middleware-ul noul cookie
 
     } catch (err) {
       setError("Eroare server. Verifică conexiunea.");
@@ -60,13 +58,14 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           
           <div className="input-group">
-            <label htmlFor="email_username">Email</label>
+            <label htmlFor="email">Email</label>
             <input 
               type="text" 
-              id="email_username" 
+              id="email" 
               placeholder="Enter your email"
               required 
-              onChange={(e) => setFormData({...formData, email_username: e.target.value})}
+              // Actualizăm state-ul corect
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
             />
           </div>
 
@@ -97,7 +96,6 @@ const Login = () => {
             <a href="/reset">Forgot Password?</a>
           </div>
 
-          {/* Mesaj de eroare cu rosu integrat in design */}
           {error && (
             <div style={{ color: "#ef4444", marginBottom: "15px", fontSize: "0.9rem", textAlign: "center" }}>
               {error}
