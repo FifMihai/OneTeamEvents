@@ -54,11 +54,18 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
     refreshData();
   }, []);
 
-  // --- LOGOUT ---
+  // --- LOGOUT ROBUST (Modificat pentru securitate) ---
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
-    router.refresh();
+    try {
+      // 1. Cerem serverului să șteargă cookie-ul
+      await fetch('/api/auth/logout', { method: 'POST' });
+      
+      // 2. Forțăm o reîncărcare completă a paginii către Login.
+      // Asta șterge memoria cache a browserului și previne intrarea cu butonul "Back".
+      window.location.href = '/login'; 
+    } catch (error) {
+      console.error("Eroare la logout", error);
+    }
   };
 
   // --- DELETE ---
@@ -194,7 +201,7 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
          />
       </div>
 
-      {/* MODALELE - Aici era problema înainte, lipseau */}
+      {/* MODALELE */}
       <CreateEventModal 
         isOpen={isCreateModalOpen} 
         onClose={() => setIsCreateModalOpen(false)} 

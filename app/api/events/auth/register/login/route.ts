@@ -1,43 +1,38 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const { email, password } = await request.json();
 
-    // Cautam userul
-    const user = await prisma.user.findUnique({
-      where: { email: email },
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
-      return NextResponse.json({ error: "Email gresit" }, { status: 401 });
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const token = jwt.sign(
+        { userId: user.id, email: user.email }, 
+        process.env.JWT_SECRET || "secret", 
+        { expiresIn: '1d' }
+      );
+
+      // --- CHEIA SUCCESULUI ---
+      // Setăm cookie-ul explicit pe rădăcină ('/')
+      // Setăm secure: false pentru localhost (ca să nu facă figuri)
+      const cookieStore = await cookies();
+      cookieStore.set('auth_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // False pe localhost
+        maxAge: 86400,
+        path: '/', // <--- ASTA E CRITIC
+        sameSite: 'lax'
+      });
+
+      return NextResponse.json({ success: true });
+    } else {
+      return NextResponse.json({ error: "Date incorecte" }, { status: 401 });
     }
-
-    // Verificam parola
-    const passwordMatch = await bcrypt.compare(password, user.password);
-
-    if (!passwordMatch) {
-      return NextResponse.json({ error: "Parola gresita" }, { status: 401 });
-    }
-
-    // Generam TOKEN-ul (Asta vrea colegul tau!)
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || "secret",
-      { expiresIn: "1h" }
-    );
-
-    // Trimitem token-ul inapoi
-    return NextResponse.json({
-      message: "Login reusit!",
-      token: token,
-      user: { id: user.id, name: user.name, role: user.role }
-    });
-
   } catch (error) {
     return NextResponse.json({ error: "Eroare server" }, { status: 500 });
   }

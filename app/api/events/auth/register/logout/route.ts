@@ -2,8 +2,18 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export async function POST() {
-  // Ștergem cookie-ul de autentificare
-  (await cookies()).delete("auth_token");
+  const cookieStore = await cookies();
 
-  return NextResponse.json({ message: "Delogat cu succes" });
+  // "Distrugem" cookie-ul suprascriindu-l
+  // Trebuie să aibă EXACT același 'path' ca la Login
+  cookieStore.set('auth_token', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    expires: new Date(0), // Îl expirăm în anul 1970
+    maxAge: 0,            // Moare instant
+    path: '/',            // <--- Fără asta, nu poate șterge cookie-ul global!
+    sameSite: 'lax'
+  });
+
+  return NextResponse.json({ success: true });
 }
