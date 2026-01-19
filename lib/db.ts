@@ -1,14 +1,20 @@
-// lib/db.ts
 import { Pool } from 'pg';
 
-let conn: any;
+let conn: Pool | undefined;
 
 if (!conn) {
+  // Verificăm dacă link-ul există. Dacă nu, aruncăm o eroare clară.
+  if (!process.env.DATABASE_URL) {
+    throw new Error("❌ EROARE CRITICĂ: Variabila DATABASE_URL lipsește din .env.local");
+  }
+
   conn = new Pool({
-    // 👇 Aici pui link-ul direct între ghilimele (păstrează ghilimelele!)
-    connectionString: 'postgresql://neondb_owner:npg_3NlWqaXD5pix@ep-empty-tree-ag2t7hph-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
-    });
-    
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    },
+    connectionTimeoutMillis: 5000 // 5 secunde timeout
+  });
 }
 
-export default conn;
+export default conn!;

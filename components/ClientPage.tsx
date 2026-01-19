@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+// Importăm toate cele 3 acțiuni din server
+import { createEventInDb, deleteEventFromDb, updateEventInDb } from "../app/actions";
 import { ThemeToggle } from "./ThemeToggle";
 import { EventModal } from "./EventModal";
 import EventsWrapper from "./EventsWrapper";
@@ -10,12 +12,11 @@ import EditEventModal from "./EditEventModal";
 import { PlusCircle, Heart, LayoutGrid, UserCheck } from "lucide-react";
 
 export default function ClientPage({ initialEvents }: { initialEvents: any[] }) {
-  // SIMULARE UTILIZATOR LOGAT (Această info va veni de la Raul prin Artiom)
   const currentUserId = "user_mihai_123"; 
 
   const [events, setEvents] = useState(initialEvents.map(ev => ({
     ...ev,
-    creatorId: ev.creatorId || "admin" // Punem un creatorId default pe evenimentele vechi
+    creatorId: ev.creatorId || "admin"
   })));
 
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -40,10 +41,19 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
     refreshData();
   }, []);
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = async (id: string) => {
     if (window.confirm("Ești sigur că vrei să ștergi acest eveniment?")) {
-      setEvents((prev) => prev.filter((ev) => ev.id !== id));
-      refreshData();
+      // Trimitem cererea de ștergere la server împreună cu ID-ul tău
+      const result = await deleteEventFromDb(id, currentUserId);
+      
+      if (result.success) {
+        // Dacă serverul a zis OK, ștergem și din ecran
+        setEvents((prev) => prev.filter((ev) => ev.id !== id));
+        refreshData();
+      } else {
+        // Dacă serverul a zis NU (pentru că nu e evenimentul tău), afișăm mesaj
+        alert(result.message || "Nu poți șterge evenimentul altcuiva!");
+      }
     }
   };
 
@@ -52,16 +62,31 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (updatedEvent: any) => {
-    setEvents((prev) => 
-      prev.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
-    );
+  const handleSaveEdit = async (updatedEvent: any) => {
+    // Trimitem cererea de editare la server împreună cu ID-ul tău
+    const result = await updateEventInDb(updatedEvent, currentUserId);
+    
+    if (result.success) {
+      setEvents((prev) => 
+        prev.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
+      );
+    } else {
+      alert(result.message || "Nu poți edita evenimentul altcuiva!");
+    }
   };
 
-  const handleAddEvent = (newEvent: any) => {
-    // Când creezi un eveniment nou, îi atribuim automat ID-ul tău de creator
+  const handleAddEvent = async (newEvent: any) => {
+    // Punem ID-ul tău pe noul eveniment
     const eventWithOwner = { ...newEvent, creatorId: currentUserId };
-    setEvents([eventWithOwner, ...events]);
+    
+    // Trimitem la server
+    const response = await createEventInDb(eventWithOwner);
+
+    if (response.success) {
+      setEvents((prev) => [response.newEvent, ...prev]);
+    } else {
+      alert("Eroare: Evenimentul nu s-a putut salva în baza de date.");
+    }
   };
 
   const filteredEvents = events.filter((event) => {
@@ -122,7 +147,7 @@ export default function ClientPage({ initialEvents }: { initialEvents: any[] }) 
             onEventClick={setSelectedEvent} 
             onDelete={handleDeleteEvent} 
             onEdit={handleEditEvent}
-            currentUserId={currentUserId} // Trimitem ID-ul utilizatorului logat
+            currentUserId={currentUserId}
          />
       </div>
 
