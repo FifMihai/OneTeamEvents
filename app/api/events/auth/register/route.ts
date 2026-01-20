@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, name } = body;
+    const { email, password, name, username } = body;
 
     // Validare simpla
     if (!email || !password || !name) {
@@ -13,9 +13,14 @@ export async function POST(request: Request) {
     }
 
     // Verificam daca exista deja
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email },
-    });
+   const existingUser = await prisma.user.findFirst({
+  where: {
+    OR: [
+      { email: email },
+      { username: username }
+    ]
+  },
+});
 
     if (existingUser) {
       return NextResponse.json({ error: "Acest email este deja folosit!" }, { status: 409 });
@@ -29,6 +34,7 @@ export async function POST(request: Request) {
       data: {
         email,
         name,
+        username,
         password: hashedPassword,
         role: "STUDENT", 
       },

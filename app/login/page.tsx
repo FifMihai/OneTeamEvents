@@ -58,11 +58,11 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           
           <div className="input-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">Email or Username</label>
             <input 
               type="text" 
               id="email" 
-              placeholder="Enter your email"
+              placeholder="Enter your email or username "
               required 
               // Actualizăm state-ul corect
               onChange={(e) => setFormData({...formData, email: e.target.value})}
