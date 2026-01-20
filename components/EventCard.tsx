@@ -48,6 +48,9 @@ export default function EventCard({
 
     localStorage.setItem("favorites", JSON.stringify(newFavorites));
     setIsFavorite(!isFavorite);
+
+    window.dispatchEvent(new Event("favoritesUpdated"));
+    
   };
 
   const formattedDate = new Date(event.date).toLocaleDateString("ro-RO", {

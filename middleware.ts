@@ -20,6 +20,9 @@ export function middleware(request: NextRequest) {
   // B. (MODIFICAT) Am ELIMINAT redirecționarea inversă (Login -> Dashboard).
   // Aceasta cauza bucla infinită când token-ul era invalid.
   // Acum, dacă ai un token vechi și intri pe /login, te lăsăm să stai acolo să te reloghezi.
+if (token && isPublicPath) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
 
   return NextResponse.next()
 }
