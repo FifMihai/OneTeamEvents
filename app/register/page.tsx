@@ -31,7 +31,8 @@ const Register = () => {
         // Mapam 'username' din formularul tau la 'name' pentru baza de date
         body: JSON.stringify({ 
           email: formData.email, 
-          password: formData.password, 
+          password: formData.password,
+          username: formData.username,
           name: formData.username 
         }),
       });

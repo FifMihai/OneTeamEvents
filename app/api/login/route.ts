@@ -8,7 +8,15 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    const user = await prisma.user.findUnique({ where: { email } });
+// Înlocuiește blocul de la linia 11 cu acesta:
+const user = await prisma.user.findFirst({
+  where: {
+    OR: [
+      { email: email },
+      { username: email }
+    ]
+  }
+});
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign(
