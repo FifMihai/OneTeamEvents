@@ -35,8 +35,26 @@ export default async function Dashboard() {
     redirect('/login');
   }
   
-  const events = await prisma.event.findMany({ orderBy: { createdAt: 'desc' } });
-  const safeEvents = events.map(ev => ({ ...ev, date: ev.date.toISOString(), createdAt: ev.createdAt.toISOString(), creatorId: ev.organizerId }));
+  
+  // Am adăugat "include" ca să tragem și numele organizatorului din baza de date
+  const events = await prisma.event.findMany({ 
+    orderBy: { createdAt: 'desc' },
+    include: {
+      organizer: {
+        select: {
+          name: true // Luăm doar numele
+        }
+      }
+    }
+  });
+
+  // "safeEvents" va conține acum și obiectul "organizer" datorită lui "...ev"
+  const safeEvents = events.map(ev => ({ 
+    ...ev, 
+    date: ev.date.toISOString(), 
+    createdAt: ev.createdAt.toISOString(), 
+    creatorId: ev.organizerId 
+  }));
 
   return <ClientPage initialEvents={safeEvents} currentUser={user} />;
 }

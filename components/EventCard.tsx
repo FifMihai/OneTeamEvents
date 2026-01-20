@@ -120,6 +120,14 @@ export default function EventCard({
       <div className="p-5 flex-grow flex flex-col justify-between">
         <div>
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 line-clamp-1">{event.title}</h3>
+
+          {/* --- AICI AM ADAUGAT AFISAREA NUMELUI ORGANIZATORULUI --- */}
+          <p className="text-xs text-blue-500 font-medium mb-3 flex items-center gap-1 text-left">
+             <span className="opacity-70 text-gray-500 dark:text-gray-400">Organizat de:</span>
+             {event.organizer?.name || "Necunoscut"}
+          </p>
+          {/* -------------------------------------------------------- */}
+
           <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 mb-4">
             <div className="flex items-center gap-2 text-left">
               <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
