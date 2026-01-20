@@ -50,8 +50,15 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
     setParticipatingIds(savedParts);
   };
 
-  useEffect(() => {
+  useEffect(() =>
+  {
     refreshData();
+
+    // Ascultăm semnalul de actualizare de la orice componentă (EventCard)
+    window.addEventListener("favoritesUpdated", refreshData);
+    
+    return () => 
+      window.removeEventListener("favoritesUpdated", refreshData);
   }, []);
 
   // --- LOGOUT ROBUST (Modificat pentru securitate) ---
@@ -114,8 +121,13 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           event.location.toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (viewMode === "favorites") return matchesSearch && favoriteIds.includes(String(event.id));
-    if (viewMode === "participating") return matchesSearch && participatingIds.includes(String(event.id));
+      if (viewMode === "favorites") {
+      return matchesSearch && favoriteIds.map(String).includes(String(event.id));
+      }
+    
+     if (viewMode === "participating") {
+      return matchesSearch && participatingIds.map(String).includes(String(event.id));
+      }
     return matchesSearch;
   });
 
@@ -174,7 +186,7 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
 
         {/* TABS */}
         <div className="flex justify-center gap-4 md:gap-10 mt-12 border-b border-gray-200 dark:border-white/5 pb-1">
-          <button onClick={() => setViewMode("all")} className={`flex items-center gap-2 pb-3 px-4 text-xs font-bold transition-all relative ${viewMode === 'all' ? 'text-blue-500' : 'text-gray-500'}`}>
+          <button onClick={() => { refreshData(); setViewMode("all") }} className={`flex items-center gap-2 pb-3 px-4 text-xs font-bold transition-all relative ${viewMode === 'all' ? 'text-blue-500' : 'text-gray-500'}`}>
             <LayoutGrid className="w-4 h-4" /> Toate
             {viewMode === 'all' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500 rounded-full" />}
           </button>
