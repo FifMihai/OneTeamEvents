@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
-// Helper: Verificăm userul real din cookie
+
 async function getAuthenticatedUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token");
@@ -30,8 +30,8 @@ export async function createEventInDb(eventData: any) {
         location: eventData.location,
         date: new Date(eventData.date),
         category: eventData.category,
-        imageUrl: eventData.image, // Asigură-te că ai coloana asta în Prisma
-        organizerId: user.userId, // Legăm evenimentul de userul logat
+        imageUrl: eventData.image, 
+        organizerId: user.userId, 
       },
     });
 
