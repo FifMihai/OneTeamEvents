@@ -22,7 +22,7 @@ export default function EditEventModal({
     image: ""
   });
 
-  // Pre-completăm formularul când se deschide modalul pentru un eveniment specific
+  
   useEffect(() => {
     if (event) {
       setFormData({

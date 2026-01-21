@@ -5,9 +5,9 @@ import EventCard from './EventCard';
 interface EventsWrapperProps {
   events: any[];
   onEventClick: (event: any) => void; 
-  onDelete: (id: number) => void; // Schimbat in number
+  onDelete: (id: number) => void; 
   onEdit: (event: any) => void;
-  currentUserId: number; // Schimbat in number
+  currentUserId: number; 
 }
 
 const EventsWrapper: React.FC<EventsWrapperProps> = ({ events, onEventClick, onDelete, onEdit, currentUserId }) => {
@@ -22,10 +22,10 @@ const EventsWrapper: React.FC<EventsWrapperProps> = ({ events, onEventClick, onD
             <EventCard 
                 event={eventItem} 
                 onOpenDetails={() => onEventClick(eventItem)}
-                // Convertim ID-ul la string pentru funcția veche de delete, daca e nevoie, sau il lasam number
+                
                 onDelete={() => onDelete(eventItem.id)}
                 onEdit={onEdit}
-                // VERIFICARE: Comparăm număr cu număr
+                
                 isOwner={Number(eventItem.creatorId) === Number(currentUserId)}
             />
         </div>

@@ -38,7 +38,7 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [participatingIds, setParticipatingIds] = useState<string[]>([]);
 
-  // Actualizăm evenimentele când serverul trimite date noi
+  
   useEffect(() => {
     setEvents(initialEvents);
   }, [initialEvents]);
@@ -54,21 +54,21 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
   {
     refreshData();
 
-    // Ascultăm semnalul de actualizare de la orice componentă (EventCard)
+    
     window.addEventListener("favoritesUpdated", refreshData);
     
     return () => 
       window.removeEventListener("favoritesUpdated", refreshData);
   }, []);
 
-  // --- LOGOUT ROBUST (Modificat pentru securitate) ---
+  
   const handleLogout = async () => {
     try {
-      // 1. Cerem serverului să șteargă cookie-ul
+      
       await fetch('/api/auth/logout', { method: 'POST' });
       
-      // 2. Forțăm o reîncărcare completă a paginii către Login.
-      // Asta șterge memoria cache a browserului și previne intrarea cu butonul "Back".
+      
+      
       window.location.href = '/login'; 
     } catch (error) {
       console.error("Eroare la logout", error);
