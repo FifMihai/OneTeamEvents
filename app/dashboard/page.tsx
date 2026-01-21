@@ -35,8 +35,23 @@ export default async function Dashboard() {
     redirect('/login');
   }
   
-  const events = await prisma.event.findMany({ orderBy: { createdAt: 'desc' } });
-  const safeEvents = events.map(ev => ({ ...ev, date: ev.date.toISOString(), createdAt: ev.createdAt.toISOString(), creatorId: ev.organizerId }));
+  const events = await prisma.event.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      participants: true
+    }
+  });
+  const safeEvents = events.map(ev => ({
+    ...ev,
+    date: ev.date.toISOString(),
+    createdAt: ev.createdAt.toISOString(),
+    creatorId: ev.organizerId,
+    participants: (ev.participants || [] ).map(p => ({
+      id: p.id,
+      name: p.name,
+      username: p.username
+    }))
+  }));
 
   return <ClientPage initialEvents={safeEvents} currentUser={user} />;
 }

@@ -95,3 +95,52 @@ export async function updateEventInDb(eventData: any) {
     return { success: false, message: "Update eșuat" };
   }
 }
+
+// --- 4. JOIN EVENT (Participare) ---
+export async function joinEvent(eventId: number) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) return { success: false, message: "Trebuie să fii logat!" };
+
+    // 1. Verificăm dacă userul participă deja
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { participants: true },
+    });
+
+    if (!event) return { success: false, message: "Evenimentul nu există." };
+
+    const isAlreadyParticipating = event.participants.some(
+      (p) => p.id === user.userId
+    );
+
+    if (isAlreadyParticipating) {
+      // 2. DACĂ PARTICIPĂ -> ÎL ȘTERGEM (Anulare)
+      await prisma.event.update({
+        where: { id: eventId },
+        data: {
+          participants: {
+            disconnect: { id: user.userId }
+          }
+        }
+      });
+      revalidatePath("/dashboard");
+      return { success: true, message: "Participare anulată." };
+    } else {
+      // 3. DACĂ NU PARTICIPĂ -> ÎL ADĂUGĂM (Înscriere)
+      await prisma.event.update({
+        where: { id: eventId },
+        data: {
+          participants: {
+            connect: { id: user.userId }
+          }
+        }
+      });
+      revalidatePath("/dashboard");
+      return { success: true, message: "Te-ai înscris cu succes!" };
+    }
+  } catch (error) {
+    console.error("Join/Leave Error:", error);
+    return { success: false, message: "Eroare la procesarea participării." };
+  }
+}
