@@ -43,12 +43,21 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
     setEvents(initialEvents);
   }, [initialEvents]);
 
+  // Aceasta va actualiza fereastra deschisă (modalul) când vin date noi de la server
+useEffect(() => {
+  if (selectedEvent) {
+    const freshEvent = initialEvents.find(e => e.id === selectedEvent.id);
+    if (freshEvent) {
+      setSelectedEvent(freshEvent);
+    }
+  }
+}, [initialEvents]);
+
   const refreshData = () => {
-    const savedFavs = JSON.parse(localStorage.getItem("favorites") || "[]");
-    const savedParts = JSON.parse(localStorage.getItem("participations") || "[]");
-    setFavoriteIds(savedFavs);
-    setParticipatingIds(savedParts);
-  };
+   const savedFavs = JSON.parse(localStorage.getItem("favorites") || "[]");
+  setFavoriteIds(savedFavs);
+  router.refresh(); 
+};
 
   useEffect(() =>
   {
@@ -117,20 +126,26 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
     }
   };
 
-  const filteredEvents = events.filter((event) => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          event.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
-      if (viewMode === "favorites") {
-      return matchesSearch && favoriteIds.map(String).includes(String(event.id));
-      }
-    
-     if (viewMode === "participating") {
-      return matchesSearch && participatingIds.map(String).includes(String(event.id));
-      }
-    return matchesSearch;
-  });
+const filteredEvents = events.filter((event) => {
+  const matchesSearch = 
+    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.location.toLowerCase().includes(searchTerm.toLowerCase());
+  
+  // Dacă suntem pe tab-ul "Toate"
+  if (viewMode === "all") return matchesSearch;
 
+  // Dacă suntem pe tab-ul "Favorite" (aici încă folosim state-ul local pentru moment)
+  if (viewMode === "favorites") {
+    return matchesSearch && favoriteIds.map(String).includes(String(event.id));
+  }
+
+  // Dacă suntem pe tab-ul "Participări" - VERIFICĂM DIRECT ÎN DB
+  if (viewMode === "participating") {
+    return matchesSearch && event.participants?.some((p: any) => p.id === currentUser.id);
+  }
+
+  return matchesSearch;
+});
   return (
     <main className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-[#121212] text-white' : 'bg-gray-50 text-gray-900'}`}>
       
@@ -191,15 +206,23 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
             {viewMode === 'all' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500 rounded-full" />}
           </button>
           
-          <button onClick={() => { refreshData(); setViewMode("favorites"); }} className={`flex items-center gap-2 pb-3 px-4 text-xs font-bold transition-all relative ${viewMode === 'favorites' ? 'text-red-500' : 'text-gray-500'}`}>
-            <Heart className={`w-4 h-4 ${viewMode === 'favorites' ? 'fill-current' : ''}`} /> Favorite ({favoriteIds.length})
-            {viewMode === 'favorites' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 rounded-full" />}
-          </button>
+            <button 
+             onClick={() => { refreshData(); setViewMode("favorites"); }} 
+             className={`flex items-center gap-2 pb-3 px-4 text-xs font-bold transition-all relative ${viewMode === 'favorites' ? 'text-red-500' : 'text-gray-500'}`}
+>
+              <Heart className={`w-4 h-4 ${viewMode === 'favorites' ? 'fill-current' : ''}`} /> 
+               Favorite ({favoriteIds.length})
+               {viewMode === 'favorites' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 rounded-full" />}
+             </button>
 
-          <button onClick={() => { refreshData(); setViewMode("participating"); }} className={`flex items-center gap-2 pb-3 px-4 text-xs font-bold transition-all relative ${viewMode === 'participating' ? 'text-green-500' : 'text-gray-500'}`}>
-            <UserCheck className="w-4 h-4" /> Participări ({participatingIds.length})
-            {viewMode === 'participating' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500 rounded-full" />}
-          </button>
+          <button 
+  onClick={() => { refreshData(); setViewMode("participating"); }} 
+  className={`flex items-center gap-2 pb-3 px-4 text-xs font-bold transition-all relative ${viewMode === 'participating' ? 'text-green-500' : 'text-gray-500'}`}
+>
+  <UserCheck className="w-4 h-4" /> 
+  Participări ({events.filter(e => e.participants?.some((p: any) => p.id === currentUser.id)).length})
+  {viewMode === 'participating' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500 rounded-full" />}
+</button>
         </div>
       </div>
 
@@ -230,10 +253,12 @@ export default function ClientPage({ initialEvents, currentUser }: ClientPagePro
       <EventModal 
         event={selectedEvent} 
         onClose={() => setSelectedEvent(null)} 
-        onParticipationChange={refreshData} 
+        onParticipationChange={refreshData}
+        currentUser={currentUser}
       />
       
       <ThemeToggle theme={isDarkMode} toggleTheme={() => setIsDarkMode(!isDarkMode)} />
     </main>
   );
 }
+

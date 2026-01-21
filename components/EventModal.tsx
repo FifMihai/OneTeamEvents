@@ -2,6 +2,8 @@
 import { X, MapPin, Users, CheckCircle2, UserPlus, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 
+import { joinEvent } from "app/actions";
+
 const EVENT_IMAGES: Record<string, string> = {
   Sport: "https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1000&auto=format&fit=crop",
   Party: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000&auto=format&fit=crop",
@@ -13,39 +15,27 @@ const EVENT_IMAGES: Record<string, string> = {
 export function EventModal({ 
   event, 
   onClose,
-  onParticipationChange 
-}: { 
+  onParticipationChange,
+   currentUser
+  }: { 
   event: any; 
   onClose: () => void;
-  onParticipationChange: () => void; 
-}) {
-  const [isParticipating, setIsParticipating] = useState(false);
-
-  useEffect(() => {
-    if (event) {
-      const participations = JSON.parse(localStorage.getItem("participations") || "[]");
-      setIsParticipating(participations.includes(event.id));
-    }
-  }, [event]);
+    onParticipationChange: () => void;
+   currentUser: any;
+  }) {
+  
 
   if (!event) return null;
-
-  const handleToggleParticipation = () => {
-    const participations = JSON.parse(localStorage.getItem("participations") || "[]");
-    let newParticipations;
-
-    if (isParticipating) {
-      newParticipations = participations.filter((id: string) => id !== event.id);
-    } else {
-      newParticipations = [...participations, event.id];
-    }
-
-    localStorage.setItem("participations", JSON.stringify(newParticipations));
-    setIsParticipating(!isParticipating);
-    onParticipationChange();
+    const isParticipating = event.participants?.some((p: any) => p.id === currentUser?.id);
+    const handleToggleParticipation = async () => {
+    const result = await joinEvent(event.id);
+    if (result.success) {
+    onParticipationChange(); 
+     } else {
+    alert(result.message);
+   }
   };
 
-  const mockParticipants = ["Mihai F.", "Artiom B.", "Raul S.", "Andreea D.", "Luca T."];
 
   // Imaginea automată
   const displayImage = event.image || EVENT_IMAGES[event.category] || EVENT_IMAGES.General;
@@ -106,31 +96,29 @@ export function EventModal({
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
                 <Users className="w-4 h-4" /> 
-                Participanți ({isParticipating ? mockParticipants.length + 1 : mockParticipants.length})
+                 Participanți ({event.participants?.length || 0})
               </h3>
             </div>
             
-            <div className="flex flex-wrap items-center gap-3 mb-8">
-              <div className="flex -space-x-4">
-                {mockParticipants.slice(0, 4).map((p, i) => (
-                  <div 
-                    key={i} 
-                    className="w-12 h-12 rounded-full border-4 border-white dark:border-[#1e1e1e] bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center text-[10px] font-black shadow-sm"
-                  >
-                    {p.split(' ').map(n => n[0]).join('')}
-                  </div>
-                ))}
-                {isParticipating && (
-                  <div className="w-12 h-12 rounded-full border-4 border-white dark:border-[#1e1e1e] bg-blue-500 flex items-center justify-center text-white text-[10px] font-black animate-bounce z-10 shadow-lg">
-                    TU
-                  </div>
-                )}
-              </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium ml-2">
-                {isParticipating ? "Tu și alți " : ""} {mockParticipants.length} persoane vin la acest eveniment.
-              </p>
-            </div>
+<div className="flex flex-wrap items-center gap-3 mb-8">
+  <div className="flex -space-x-4">
+    {event.participants?.slice(0, 4).map((p: any, i: number) => (
+      <div 
+        key={i} 
+        className="w-12 h-12 rounded-full border-4 border-white dark:border-[#1e1e1e] bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center text-[10px] font-black shadow-sm"
+      >
+        {(p.username || p.name || "U").substring(0, 2).toUpperCase()}
+      </div>
+    ))}
+  </div>
 
+  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium ml-2">
+    {event.participants?.length === 1 
+      ? "O persoană participă la acest eveniment." 
+      : `${event.participants?.length || 0} persoane participă la acest eveniment.`}
+  </p>
+</div>
+            
             <button
               onClick={handleToggleParticipation}
               className={`w-full py-5 rounded-[1.5rem] font-black transition-all flex items-center justify-center gap-3 shadow-xl ${

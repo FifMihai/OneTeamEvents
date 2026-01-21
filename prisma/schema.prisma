@@ -15,7 +15,7 @@ model User {
   password  String    
   name      String
   role      String    @default("STUDENT") // Poate fi "STUDENT" sau "ORGANIZER"
-  
+  attendingEvents Event[]  @relation("EventParticipants")
   bookings  Booking[] 
   events    Event[]
 }
@@ -30,10 +30,12 @@ model Event {
   category    String 
   imageUrl    String?   
   createdAt   DateTime  @default(now())
+
+  participants User[]    @relation("EventParticipants")
   
   organizerId Int?
   organizer   User?     @relation(fields: [organizerId], references: [id])
-  participants Booking[]
+  bookings  Booking[]
 }
 
 // 3. INSCRIERILE (Legatura dintre Student si Eveniment)

@@ -4,8 +4,8 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import ClientPage from '../../components/ClientPage';
 
-// --- LINIE NOUĂ OBLIGATORIE ---
-// Asta forțează serverul să verifice cookie-ul la fiecare refresh, fără excepție.
+
+
 export const dynamic = 'force-dynamic'; 
 
 async function getUser() {
@@ -24,36 +24,47 @@ async function getUser() {
 export default async function Dashboard() {
   const userToken: any = await getUser();
 
-  // Dacă userul e null, Redirect IMEDIAT
+  
   if (!userToken) {
     redirect('/login');
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userToken.userId }, select: { id: true, name: true, email: true } });
+  const user = await prisma.user.findUnique({ 
+    where: { id: userToken.userId }, 
+    select: { id: true, name: true, email: true } 
+  });
   
   if (!user) {
     redirect('/login');
   }
   
-  
-  // Am adăugat "include" ca să tragem și numele organizatorului din baza de date
-  const events = await prisma.event.findMany({ 
+  const events = await prisma.event.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
+      
       organizer: {
         select: {
-          name: true // Luăm doar numele
+          name: true 
         }
-      }
+      },
+      
+      participants: true
     }
   });
 
-  // "safeEvents" va conține acum și obiectul "organizer" datorită lui "...ev"
-  const safeEvents = events.map(ev => ({ 
-    ...ev, 
-    date: ev.date.toISOString(), 
-    createdAt: ev.createdAt.toISOString(), 
-    creatorId: ev.organizerId 
+  const safeEvents = events.map(ev => ({
+    ...ev,
+    
+    
+    date: ev.date.toISOString(),
+    createdAt: ev.createdAt.toISOString(),
+    creatorId: ev.organizerId, // ID-ul creatorului
+    
+    participants: (ev.participants || []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      username: p.username
+    }))
   }));
 
   return <ClientPage initialEvents={safeEvents} currentUser={user} />;
